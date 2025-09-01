@@ -69,6 +69,7 @@ export default function Simulation() {
       Intellectual: 15,
       Journalist: 10
     },
+    baseVibeProb: 0.05,
     maWindow: 10
   });
 

@@ -39,6 +39,7 @@ export interface SimulationConfig {
   };
   boosts: Record<Attribute, number>;
   mix: Record<UserType, number>;
+  baseVibeProb: number; // Base probability for Normal users to start using vibe tags
   maWindow: number;
 }
 
@@ -292,8 +293,8 @@ export class SimulationEngine {
     const vibeTarget = vibeUsed ? 1.0 : 0.0;
     user.vibeStrategy = clamp01(user.vibeStrategy + lr * adj * (vibeTarget - user.vibeStrategy));
     
-    // Apply bias toward type-specific vibe probability
-    const typeBias = VIBE_PROB[user.type] || 0.5;
+    // Apply bias toward type-specific vibe probability (Normal users use configurable base)
+    const typeBias = user.type === 'Normal' ? 0.05 : (VIBE_PROB[user.type] || 0.5);
     user.vibeStrategy = clamp01(0.95 * user.vibeStrategy + 0.05 * typeBias);
   }
 
@@ -315,7 +316,7 @@ export class SimulationEngine {
     user.followers = Math.max(0, user.followers + delta);
   }
 
-  private buildUsers(n: number, mix: Record<UserType, number>, learnRate: number, followersMean: number): User[] {
+  private buildUsers(n: number, mix: Record<UserType, number>, learnRate: number, followersMean: number, baseVibeProb: number): User[] {
     const entries = Object.entries(mix) as [UserType, number][];
     const total = entries.reduce((a, [, v]) => a + v, 0) || 1;
     const weights = entries.map(([, v]) => v / total);
@@ -332,7 +333,7 @@ export class SimulationEngine {
         id: i,
         type: t,
         strategy: strat,
-        vibeStrategy: clamp01((VIBE_PROB[t] || 0.5) + randNorm(0, 0.15)), // Initialize with type bias + noise
+        vibeStrategy: clamp01((t === 'Normal' ? baseVibeProb : (VIBE_PROB[t] || 0.5)) + randNorm(0, 0.15)), // Initialize with configurable base + noise
         wReact: clamp01(0.5 + Math.random() * 0.4),
         learnRate,
         followers: Math.max(0, Math.round(Math.max(0, randNorm(followersMean, followersMean * 0.5))))
@@ -342,7 +343,7 @@ export class SimulationEngine {
   }
 
   startSimulation(cfg: SimulationConfig): SimulationState {
-    this.state.users = this.buildUsers(cfg.usersN, cfg.mix, cfg.learnRate, cfg.followersMean);
+    this.state.users = this.buildUsers(cfg.usersN, cfg.mix, cfg.learnRate, cfg.followersMean, cfg.baseVibeProb);
     this.state.rows = [];
     this.state.ref = 100;
     this.state.roundsDone = 0;
@@ -382,6 +383,7 @@ export class SimulationEngine {
       w: { strong_agree: 1.0, agree: 0.8, not_sure: 0.2, disagree: 0.0, strong_disagree: -0.6 },
       boosts: { humor: 0, insight: 0, bait: 0, controversy: 0, news: 0, dunk: 0 },
       mix: { Normal: 55, Joker: 10, Troll: 10, Intellectual: 15, Journalist: 10 },
+      baseVibeProb: 0.05,
       maWindow: 10
     };
     

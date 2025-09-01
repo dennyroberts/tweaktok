@@ -251,6 +251,19 @@ export default function SimulationControls({
               step={0.05}
             />
           </div>
+          
+          <div className="grid grid-cols-1 gap-4">
+            <TooltipInput
+              label="Base Vibe Probability 🎯"
+              tooltip="Starting probability for Normal users to use vibe tags. They'll learn from here. 0.05 = 5% chance initially."
+              id="baseVibeProb"
+              value={config.baseVibeProb}
+              onChange={(value) => updateConfig('baseVibeProb', value)}
+              min={0}
+              max={1}
+              step={0.01}
+            />
+          </div>
         </div>
       </Card>
 
