@@ -72,7 +72,12 @@ export default function SimulationControls({
         max={max}
         step={step}
         value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val === '') return;
+          const num = parseFloat(val);
+          if (!isNaN(num)) onChange(num);
+        }}
         className="w-full bg-input border-border text-foreground"
       />
     </div>

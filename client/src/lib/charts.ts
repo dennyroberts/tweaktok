@@ -138,20 +138,11 @@ export class ChartManager {
       labels,
       datasets: [
         {
-          label: 'Avg Reward',
-          data: state.seriesReward,
-          borderColor: colors.primary,
-          backgroundColor: colors.primary + '20',
-          borderWidth: 2,
-          fill: false
-        },
-        {
-          label: 'MA(10)',
+          label: 'Avg Reward (MA-10)',
           data: ma,
-          borderColor: colors.green,
-          backgroundColor: colors.green + '20',
-          borderWidth: 2,
-          borderDash: [5, 5],
+          borderColor: colors.orange,
+          backgroundColor: colors.orange + '20',
+          borderWidth: 3,
           fill: false
         }
       ]
@@ -167,20 +158,11 @@ export class ChartManager {
       labels,
       datasets: [
         {
-          label: 'Avg Bait Flags',
-          data: state.seriesBait,
-          borderColor: colors.orange,
-          backgroundColor: colors.orange + '20',
-          borderWidth: 2,
-          fill: false
-        },
-        {
-          label: 'MA(10)',
+          label: 'Avg Bait Flags (MA-10)',
           data: ma,
           borderColor: colors.red,
           backgroundColor: colors.red + '20',
-          borderWidth: 2,
-          borderDash: [5, 5],
+          borderWidth: 3,
           fill: false
         }
       ]
@@ -212,23 +194,27 @@ export class ChartManager {
       return data.total > 0 ? data.a / data.total : 0;
     });
 
+    // Apply moving averages
+    const saMA = this.movingAvg(saRatios, 10);
+    const aMA = this.movingAvg(aRatios, 10);
+
     this.initializeChart('chartAgree', 'line', {
       labels: rounds,
       datasets: [
         {
-          label: 'Strong Agree %',
-          data: saRatios,
+          label: 'Strong Agree % (MA-10)',
+          data: saMA,
           borderColor: colors.green,
           backgroundColor: colors.green + '20',
-          borderWidth: 2,
+          borderWidth: 3,
           fill: false
         },
         {
-          label: 'Agree %',
-          data: aRatios,
+          label: 'Agree % (MA-10)',
+          data: aMA,
           borderColor: colors.blue,
           backgroundColor: colors.blue + '20',
-          borderWidth: 2,
+          borderWidth: 3,
           fill: false
         }
       ]
@@ -260,16 +246,17 @@ export class ChartManager {
   updateFollowersChart(state: SimulationState): void {
     const colors = this.getChartColors();
     const labels = Array.from({ length: state.seriesFollowersAll.length }, (_, i) => i + 1);
+    const ma = this.movingAvg(state.seriesFollowersAll, 10);
 
     this.initializeChart('chartFollowersAll', 'line', {
       labels,
       datasets: [
         {
-          label: 'Total Followers',
-          data: state.seriesFollowersAll,
+          label: 'Total Followers (MA-10)',
+          data: ma,
           borderColor: colors.primary,
           backgroundColor: colors.primary + '20',
-          borderWidth: 2,
+          borderWidth: 3,
           fill: true
         }
       ]
@@ -282,17 +269,19 @@ export class ChartManager {
 
     USER_TYPES.forEach((type, index) => {
       const canvasId = `chartF_${type.charAt(0)}${type === 'Journalist' ? 'O' : ''}`;
-      const labels = Array.from({ length: state.seriesFollowersByType[type]?.length || 0 }, (_, i) => i + 1);
+      const rawData = state.seriesFollowersByType[type] || [];
+      const labels = Array.from({ length: rawData.length }, (_, i) => i + 1);
+      const ma = this.movingAvg(rawData, 10);
       
       this.initializeChart(canvasId, 'line', {
         labels,
         datasets: [
           {
-            label: `${type} Followers`,
-            data: state.seriesFollowersByType[type] || [],
+            label: `${type} Followers (MA-10)`,
+            data: ma,
             borderColor: typeColors[index],
             backgroundColor: typeColors[index] + '20',
-            borderWidth: 2,
+            borderWidth: 3,
             fill: false
           }
         ]
