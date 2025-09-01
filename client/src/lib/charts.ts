@@ -78,15 +78,12 @@ export class ChartManager {
 
   private getCanvasDimensions(canvas: HTMLCanvasElement): { width: number; height: number } {
     const rect = canvas.getBoundingClientRect();
-    const devicePixelRatio = window.devicePixelRatio || 1;
     
-    // Limit canvas size to prevent "canvas exceeds max size" error
-    const maxWidth = Math.min(rect.width * devicePixelRatio, 4096);
-    const maxHeight = Math.min(rect.height * devicePixelRatio, 4096);
-    
+    // Use smaller, fixed dimensions to prevent canvas size errors
+    // The responsive: true option will handle scaling
     return {
-      width: Math.max(100, maxWidth),
-      height: Math.max(100, maxHeight)
+      width: Math.min(800, Math.max(300, rect.width)),
+      height: Math.min(400, Math.max(150, rect.height))
     };
   }
 
@@ -101,10 +98,9 @@ export class ChartManager {
       this.charts[canvasId].destroy();
     }
 
-    // Set appropriate canvas dimensions to prevent size errors
-    const dimensions = this.getCanvasDimensions(canvas);
-    canvas.width = dimensions.width;
-    canvas.height = dimensions.height;
+    // Reset canvas size to prevent issues
+    canvas.style.width = '';
+    canvas.style.height = '';
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {

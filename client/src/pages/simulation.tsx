@@ -28,7 +28,6 @@ export default function Simulation() {
     learnRate: 0.15,
     baitRatioThresh: 0.10,
     baitPenaltyMult: 0.20,
-    trollBaitMult: 1.30,
     reachMin: 30,
     reachMax: 150,
     vibeFlagMult: 0.6,

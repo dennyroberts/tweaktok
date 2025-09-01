@@ -107,6 +107,23 @@
     background: hsl(220, 50%, 7%);
     border-radius: 12px;
     border: 1px solid hsl(217, 33%, 17%);
+    max-height: 200px !important;
+  }
+  
+  /* Fix specific canvas heights */
+  .h-40 canvas {
+    height: 160px !important;
+    max-height: 160px !important;
+  }
+  
+  .h-50 canvas {
+    height: 200px !important;
+    max-height: 200px !important;
+  }
+  
+  .h-35 canvas {
+    height: 140px !important;
+    max-height: 140px !important;
   }
 }
 

@@ -11,7 +11,6 @@ export interface SimulationConfig {
   learnRate: number;
   baitRatioThresh: number;
   baitPenaltyMult: number;
-  trollBaitMult: number;
   reachMin: number;
   reachMax: number;
   vibeFlagMult: number;
@@ -241,11 +240,10 @@ export class SimulationEngine {
     return out;
   }
 
-  private baitFlagProb(eff: Record<Attribute, number>, vibeOn: boolean, flagMult: number, trollMult: number, isTroll: boolean): number {
+  private baitFlagProb(eff: Record<Attribute, number>, vibeOn: boolean, flagMult: number): number {
     let p = 0.10 * eff.bait + 0.08 * eff.controversy + 0.06 * eff.dunk;
     if (vibeOn) p *= flagMult;
-    if (isTroll) p *= trollMult;
-    return clamp01(0.01 + p);
+    return this.clamp01(0.01 + p);
   }
 
   private commentProb(eff: Record<Attribute, number>, vibeOn: boolean, boost: number): number {
@@ -375,7 +373,7 @@ export class SimulationEngine {
     // Use the last config - we should store this properly
     const defaultConfig: SimulationConfig = {
       usersN: 120, rounds: 80, learnRate: 0.15, baitRatioThresh: 0.10, baitPenaltyMult: 0.20,
-      trollBaitMult: 1.30, reachMin: 30, reachMax: 150, vibeFlagMult: 0.6, polarCoupling: 0.12,
+      reachMin: 30, reachMax: 150, vibeFlagMult: 0.6, polarCoupling: 0.12,
       vibeHumorPenalty: 0.15, vibeControversyPenalty: 0.25, vibeInsightBoost: 0.20, vibeCommentBoost: 0.20,
       vibeReachBoost: 0.10, followGainThresh: 1.30, followersMean: 200, followerReachFactor: 0.15,
       globalAudienceK: 4000, homophilyStrength: 0.35, viralityThreshold: 1500, localFloor: 0.20,
@@ -428,7 +426,7 @@ export class SimulationEngine {
         
         const reachBudget = this.reachFromAttrs(eff, cfg.reachMin, cfg.reachMax, cfg.followerReachFactor, u.followers, vibeOn, cfg.vibeReachBoost);
         let probsBase = this.reactionProbs(eff);
-        let baitP = this.baitFlagProb(eff, vibeOn, cfg.vibeFlagMult, cfg.trollBaitMult, u.type === 'Troll');
+        let baitP = this.baitFlagProb(eff, vibeOn, cfg.vibeFlagMult);
         let commentP = this.commentProb(eff, vibeOn, cfg.vibeCommentBoost);
 
         const counts = { strong_agree: 0, agree: 0, not_sure: 0, disagree: 0, strong_disagree: 0 };

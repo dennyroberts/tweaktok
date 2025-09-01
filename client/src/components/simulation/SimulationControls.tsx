@@ -132,7 +132,7 @@ export default function SimulationControls({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <TooltipInput
               label="Bait Penalty Multiplier 🧯"
               tooltip="Multiplier applied to reaction/comment probs AFTER crossing the bait threshold. 1.0 = no penalty, 0.0 = full shutdown (harsh). 0.2–0.6 is common."
@@ -141,16 +141,6 @@ export default function SimulationControls({
               onChange={(value) => updateConfig('baitPenaltyMult', value)}
               min={0}
               max={1}
-              step={0.05}
-            />
-            <TooltipInput
-              label="Troll Bait Multiplier 👹"
-              tooltip="Trolls are flagged more often: baitProb *= this. 1.0 = none, 1.3 = +30%."
-              id="trollBaitMult"
-              value={config.trollBaitMult}
-              onChange={(value) => updateConfig('trollBaitMult', value)}
-              min={1}
-              max={2}
               step={0.05}
             />
           </div>
