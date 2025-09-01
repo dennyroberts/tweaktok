@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SimulationConfig } from "@/lib/simulation";
+import { useState, useCallback } from "react";
 
 interface SimulationControlsProps {
   config: SimulationConfig;
@@ -59,43 +60,60 @@ export default function SimulationControls({
     max: number;
     step?: number;
     type?: string;
-  }) => (
-    <div className="tooltip relative" data-title={tooltip}>
-      <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-2">
-        {label}
-      </Label>
-      <Input
-        id={id}
-        data-testid={`input-${id}`}
-        type={type}
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => {
-          const val = e.target.value;
-          // Allow empty, decimal points, and negative signs for partial input
-          if (val === '' || val === '-' || val === '.' || val.endsWith('.')) {
-            return;
-          }
-          const num = parseFloat(val);
-          if (!isNaN(num)) {
-            onChange(num);
-          }
-        }}
-        onBlur={(e) => {
-          // Ensure valid number on blur
-          const val = e.target.value;
-          const num = parseFloat(val);
-          if (isNaN(num) || val === '' || val === '-' || val === '.') {
-            // Reset to current value if invalid
-            e.target.value = value.toString();
-          }
-        }}
-        className="w-full bg-input border-border text-foreground"
-      />
-    </div>
-  );
+  }) => {
+    const [localValue, setLocalValue] = useState(value.toString());
+    
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setLocalValue(val);
+      
+      // Only update parent state if we have a valid number
+      const num = parseFloat(val);
+      if (!isNaN(num) && val !== '' && val !== '-' && val !== '.') {
+        onChange(num);
+      }
+    }, [onChange]);
+    
+    const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      const num = parseFloat(val);
+      
+      if (isNaN(num) || val === '' || val === '-' || val === '.') {
+        // Reset to parent value if invalid
+        setLocalValue(value.toString());
+      } else {
+        // Ensure parent state is updated and format the display
+        onChange(num);
+        setLocalValue(num.toString());
+      }
+    }, [onChange, value]);
+    
+    // Update local value when parent value changes
+    const handleFocus = useCallback(() => {
+      setLocalValue(value.toString());
+    }, [value]);
+    
+    return (
+      <div className="tooltip relative" data-title={tooltip}>
+        <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-2">
+          {label}
+        </Label>
+        <Input
+          id={id}
+          data-testid={`input-${id}`}
+          type={type}
+          min={min}
+          max={max}
+          step={step}
+          value={localValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
+          className="w-full bg-input border-border text-foreground"
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
