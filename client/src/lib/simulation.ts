@@ -243,7 +243,7 @@ export class SimulationEngine {
   private baitFlagProb(eff: Record<Attribute, number>, vibeOn: boolean, flagMult: number): number {
     let p = 0.10 * eff.bait + 0.08 * eff.controversy + 0.06 * eff.dunk;
     if (vibeOn) p *= flagMult;
-    return this.clamp01(0.01 + p);
+    return clamp01(0.01 + p);
   }
 
   private commentProb(eff: Record<Attribute, number>, vibeOn: boolean, boost: number): number {
