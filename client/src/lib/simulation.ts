@@ -510,8 +510,10 @@ export class SimulationEngine {
         for (const k of ATTRS) attrSumByType[u.type][k] += attrs[k];
         attrSumByType[u.type].n++;
         
-        if (vibeOn) vibeOnCount++;
-        vibeOnByType[u.type]++;
+        if (vibeOn) {
+          vibeOnCount++;
+          vibeOnByType[u.type]++;
+        }
         postsByType[u.type]++;
       }
 

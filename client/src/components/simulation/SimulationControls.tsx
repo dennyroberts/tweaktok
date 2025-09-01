@@ -74,9 +74,23 @@ export default function SimulationControls({
         value={value}
         onChange={(e) => {
           const val = e.target.value;
-          if (val === '') return;
+          // Allow empty, decimal points, and negative signs for partial input
+          if (val === '' || val === '-' || val === '.' || val.endsWith('.')) {
+            return;
+          }
           const num = parseFloat(val);
-          if (!isNaN(num)) onChange(num);
+          if (!isNaN(num)) {
+            onChange(num);
+          }
+        }}
+        onBlur={(e) => {
+          // Ensure valid number on blur
+          const val = e.target.value;
+          const num = parseFloat(val);
+          if (isNaN(num) || val === '' || val === '-' || val === '.') {
+            // Reset to current value if invalid
+            e.target.value = value.toString();
+          }
         }}
         className="w-full bg-input border-border text-foreground"
       />

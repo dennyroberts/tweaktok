@@ -364,16 +364,20 @@ export class ChartManager {
       }
     });
 
-    // Vibe usage by type
+    // Vibe usage by type with moving averages
     const typeColors = [colors.primary, colors.green, colors.orange, colors.red, colors.blue];
-    const vibeDatasets = USER_TYPES.map((type, index) => ({
-      label: type,
-      data: state.seriesVibeByType[type] || [],
-      borderColor: typeColors[index],
-      backgroundColor: typeColors[index] + '20',
-      borderWidth: 2,
-      fill: false
-    }));
+    const vibeDatasets = USER_TYPES.map((type, index) => {
+      const rawData = state.seriesVibeByType[type] || [];
+      const ma = this.movingAvg(rawData, 10);
+      return {
+        label: `${type} Vibe % (MA-10)`,
+        data: ma,
+        borderColor: typeColors[index],
+        backgroundColor: typeColors[index] + '20',
+        borderWidth: 3,
+        fill: false
+      };
+    });
 
     this.initializeChart('chartVibeByType', 'line', {
       labels,
