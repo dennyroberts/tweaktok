@@ -76,6 +76,20 @@ export class ChartManager {
     return out;
   }
 
+  private getCanvasDimensions(canvas: HTMLCanvasElement): { width: number; height: number } {
+    const rect = canvas.getBoundingClientRect();
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    
+    // Limit canvas size to prevent "canvas exceeds max size" error
+    const maxWidth = Math.min(rect.width * devicePixelRatio, 4096);
+    const maxHeight = Math.min(rect.height * devicePixelRatio, 4096);
+    
+    return {
+      width: Math.max(100, maxWidth),
+      height: Math.max(100, maxHeight)
+    };
+  }
+
   initializeChart(canvasId: string, type: 'line' | 'bar' | 'doughnut', data: any, options?: any): Chart {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     if (!canvas) {
@@ -87,6 +101,11 @@ export class ChartManager {
       this.charts[canvasId].destroy();
     }
 
+    // Set appropriate canvas dimensions to prevent size errors
+    const dimensions = this.getCanvasDimensions(canvas);
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error(`Could not get 2D context for canvas ${canvasId}`);
@@ -96,7 +115,18 @@ export class ChartManager {
     const chart = new Chart(ctx, {
       type,
       data,
-      options: { ...defaultOptions, ...options }
+      options: { 
+        ...defaultOptions, 
+        ...options,
+        animation: {
+          duration: 200 // Reduce animation time for better performance
+        },
+        elements: {
+          point: {
+            radius: 2 // Smaller points for better performance
+          }
+        }
+      }
     });
 
     this.charts[canvasId] = chart;

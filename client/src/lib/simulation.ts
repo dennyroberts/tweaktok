@@ -46,6 +46,7 @@ export interface User {
   id: number;
   type: UserType;
   strategy: Record<Attribute, number>;
+  vibeStrategy: number; // Learned propensity to use vibe tags (0-1)
   wReact: number;
   learnRate: number;
   followers: number;
@@ -143,11 +144,11 @@ export class SimulationEngine {
       seriesReward: [],
       seriesBait: [],
       seriesAttrs: [],
-      seriesAttrsByType: {},
-      seriesFollowersByType: {},
+      seriesAttrsByType: {} as Record<UserType, number[][]>,
+      seriesFollowersByType: {} as Record<UserType, number[]>,
       seriesFollowersAll: [],
       seriesVibeOverall: [],
-      seriesVibeByType: {},
+      seriesVibeByType: {} as Record<UserType, number[]>,
       best: null
     };
 
@@ -277,13 +278,23 @@ export class SimulationEngine {
     return user.wReact * wr + (1 - user.wReact) * comments;
   }
 
-  private learn(user: User, attrs: Record<Attribute, number>, reward: number, ref: number): void {
+  private learn(user: User, attrs: Record<Attribute, number>, vibeUsed: boolean, reward: number, ref: number): void {
     const lr = user.learnRate;
     const adj = Math.tanh((reward - 0.5 * ref) / (0.75 * ref));
+    
+    // Learn attribute strategy
     for (const k of ATTRS) {
       user.strategy[k] = clamp01(user.strategy[k] + lr * adj * (attrs[k] - user.strategy[k]));
       user.strategy[k] = clamp01(0.97 * user.strategy[k] + 0.03 * TYPE_BIAS[user.type][k]);
     }
+    
+    // Learn vibe usage strategy
+    const vibeTarget = vibeUsed ? 1.0 : 0.0;
+    user.vibeStrategy = clamp01(user.vibeStrategy + lr * adj * (vibeTarget - user.vibeStrategy));
+    
+    // Apply bias toward type-specific vibe probability
+    const typeBias = VIBE_PROB[user.type] || 0.5;
+    user.vibeStrategy = clamp01(0.95 * user.vibeStrategy + 0.05 * typeBias);
   }
 
   private followerUpdate(
@@ -321,6 +332,7 @@ export class SimulationEngine {
         id: i,
         type: t,
         strategy: strat,
+        vibeStrategy: clamp01((VIBE_PROB[t] || 0.5) + randNorm(0, 0.15)), // Initialize with type bias + noise
         wReact: clamp01(0.5 + Math.random() * 0.4),
         learnRate,
         followers: Math.max(0, Math.round(Math.max(0, randNorm(followersMean, followersMean * 0.5))))
@@ -337,11 +349,11 @@ export class SimulationEngine {
     this.state.seriesReward = [];
     this.state.seriesBait = [];
     this.state.seriesAttrs = [];
-    this.state.seriesAttrsByType = {};
-    this.state.seriesFollowersByType = {};
+    this.state.seriesAttrsByType = {} as Record<UserType, number[][]>;
+    this.state.seriesFollowersByType = {} as Record<UserType, number[]>;
     this.state.seriesFollowersAll = [];
     this.state.seriesVibeOverall = [];
-    this.state.seriesVibeByType = {};
+    this.state.seriesVibeByType = {} as Record<UserType, number[]>;
     this.state.best = null;
 
     for (const t of USER_TYPES) {
@@ -406,7 +418,8 @@ export class SimulationEngine {
           attrs[k] = clamp01(randNorm(base, 0.12));
         }
 
-        const vibeOn = Math.random() < (u.type === 'Joker' || u.type === 'Troll' ? 0 : (VIBE_PROB[u.type] || 0.6));
+        // Use learned vibe strategy, but force Jokers and Trolls to never use vibe
+        const vibeOn = u.type === 'Joker' || u.type === 'Troll' ? false : Math.random() < u.vibeStrategy;
         let eff = { ...attrs };
         eff = this.vibeAdjust(eff, vibeOn, cfg);
         eff = this.applyBoosts(eff, cfg.boosts);
@@ -462,7 +475,7 @@ export class SimulationEngine {
 
         const reward = this.engagementScore(counts, comments, u, cfg.w);
         this.state.ref = 0.98 * this.state.ref + 0.02 * Math.max(1, reward);
-        this.learn(u, attrs, reward, this.state.ref);
+        this.learn(u, attrs, vibeOn, reward, this.state.ref);
         this.followerUpdate(u, counts, comments, baitFlags, cfg, interactions, reward, this.state.ref);
 
         const row: PostRow = {
