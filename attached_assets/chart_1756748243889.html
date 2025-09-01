@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nuanced Discourse Simulator — v5 (Canvas)</title>
+<style>
+:root{--bg:#0b0d10;--panel:#141820;--text:#e8ecf1;--muted:#9aa5b1;--accent:#8bd3ff;--green:#7ce38b;--orange:#ffcf8b;--red:#ff8b8b;--blue:#7fb3ff;--pink:#ff9ad1}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:linear-gradient(180deg,#0b0d10 0%,#0e1117 60%,#0b0d10 100%)}
+header{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #202736;position:sticky;top:0;z-index:5;background:#0e1117cc;backdrop-filter:blur(4px)}
+h1{font-size:18px;margin:0}
+.container{display:grid;grid-template-columns:480px 1fr;gap:16px;padding:16px;align-items:start}
+.card{background:var(--panel);border:1px solid #1f2735;border-radius:14px;padding:14px}
+.card h2{margin:0 0 10px 0;font-size:15px;color:var(--accent)}
+.section-title{margin:8px 0;font-size:13px;color:#cfeeff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:12px;color:var(--muted)}
+input[type="number"],select{width:100%;padding:8px;border-radius:8px;border:1px solid #263045;background:#0f141c;color:var(--text)}
+.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;background:#1a2233;color:var(--text);border:1px solid #2a3550;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:#3b4e7a}.btn.primary{background:#153044;border-color:#1e4a6a;color:#cfeeff}
+.muted{color:var(--muted);font-size:12px}
+.kpi{display:flex;gap:20px;margin-bottom:10px;flex-wrap:wrap}.kpi .pill{background:#101723;border:1px solid #1f2735;padding:8px 10px;border-radius:10px;font-size:12px}.hl{color:#cfeeff}
+.footer{padding:10px 16px;color:var(--muted);font-size:11px;text-align:center}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.grid-5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+canvas{background:#0f141c;border-radius:12px;border:1px solid #1f2735;padding:8px}
+.chart-med{height:160px !important}.chart-followers{height:140px !important}.chart-tall{height:200px !important}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}th,td{border-bottom:1px solid #1f2735;padding:8px;text-align:right}th:first-child,td:first-child{text-align:left}
+.help{display:inline-flex;align-items:center;gap:6px;cursor:help;color:#cfeeff;font-size:12px}.help .icon{background:#0f141c;border:1px solid #2a3550;padding:2px 6px;border-radius:999px}
+.tooltip{position:relative;display:inline-block}
+.tooltip[data-title]::after{content:attr(data-title);position:absolute;left:0;top:calc(100% + 6px);background:#0f141c;border:1px solid #2a3550;color:#e8ecf1;padding:8px 10px;border-radius:10px;min-width:220px;max-width:460px;white-space:normal;line-height:1.3;opacity:0;transform:translateY(-4px);transition:opacity .12s ease,transform .12s ease;pointer-events:none;z-index:10}
+.tooltip:hover::after{opacity:1;transform:translateY(0)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#0f141c;border:1px solid #263045;font-size:11px;color:#cfeeff}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:8px;font-size:13px}.kv .key{color:var(--muted)}
+.bestpost{background:#0f141c;border:1px dashed #2a3550;border-radius:12px;padding:10px}
+.toggle-types{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.toggle-types label{display:flex;gap:6px;align-items:center;background:#0f141c;border:1px solid #263045;padding:4px 8px;border-radius:999px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧪 Nuanced Discourse Simulator — v5</h1>
+  <span class="muted">Network & homophily • vibe dynamics • type utilities • bait ratio penalty</span>
+</header>
+<div class="container">
+  <div class="card">
+    <h2>🛠️ Simulation Controls <span class="badge">hover ℹ️ for math</span></h2>
+    <div class="row">
+      <div class="tooltip" data-title="Number of agents (users). Larger N smooths averages but is slower."><label>Users 👥</label><input id="users" type="number" min="5" max="5000" step="1" value="120"></div>
+      <div class="tooltip" data-title="How many posting rounds to simulate on Run. Use ➕ to extend later."><label>Rounds (initial) 🔁</label><input id="rounds" type="number" min="5" max="500" step="1" value="80"></div>
+    </div>
+
+    <div class="row">
+      <div class="tooltip" data-title="Learning rate in the strategy update: s ← s + lr * adj * (post − s). Higher = faster adaptation/overfitting. Typical 0.05–0.3."><label>Learning Rate 🧠</label><input id="learnRate" type="number" min="0" max="1" step="0.01" value="0.15"></div>
+      <div class="tooltip" data-title="If bait_flags / interactions ≥ threshold, we scale down engagement probs by the Bait Penalty Multiplier. Typical 0.08–0.2."><label>Bait Ratio Threshold 🚩</label><input id="baitRatioThresh" type="number" min="0.01" max="0.8" step="0.01" value="0.10"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Multiplier applied to reaction/comment probs AFTER crossing the bait threshold. 1.0 = no penalty, 0.0 = full shutdown (harsh). 0.2–0.6 is common."><label>Bait Penalty Multiplier 🧯</label><input id="baitPenaltyMult" type="number" min="0" max="1" step="0.05" value="0.20"></div>
+      <div class="tooltip" data-title="Trolls are flagged more often: baitProb *= this. 1.0 = none, 1.3 = +30%."><label>Troll Bait Multiplier 👹</label><input id="trollBaitMult" type="number" min="1" max="2" step="0.05" value="1.30"></div>
+    </div>
+
+    <div class="row">
+      <div class="tooltip" data-title="Base exposure budget per post before attribute/follower effects."><label>Base Reach Min 📡</label><input id="reachMin" type="number" min="1" max="10000" step="1" value="30"></div>
+      <div class="tooltip" data-title="Upper bound for base exposure before effects."><label>Base Reach Max 📡</label><input id="reachMax" type="number" min="1" max="10000" step="1" value="150"></div>
+    </div>
+
+    <div class="row">
+      <div class="tooltip" data-title="If Vibe tag is on, we multiply bait flag probability by this (lower is more protective). 0.5–0.8 typical."><label>Vibe Flag Multiplier 🏷️</label><input id="vibeFlagMult" type="number" min="0.1" max="1" step="0.05" value="0.6"></div>
+      <div class="tooltip" data-title="Couples extremes: more SA makes SD more likely and vice versa. 0 = off, 0.1–0.2 = moderate, 0.4+ = intense polarization."><label>Polarization Coupling ⚖️</label><input id="polarCoupling" type="number" min="0" max="0.5" step="0.01" value="0.12"></div>
+    </div>
+
+    <div class="section-title">🏷️ Vibe Effects</div>
+    <div class="row">
+      <div class="tooltip" data-title="When Vibe is on: humor *= (1 − x). 0.15 reduces humor by 15% to steer earnest tone."><label>Vibe Humor Penalty 🤐</label><input id="vibeHumorPenalty" type="number" min="0" max="0.9" step="0.05" value="0.15"></div>
+      <div class="tooltip" data-title="When Vibe is on: controversy *= (1 − x). 0.25 trims spiciness by 25%."><label>Vibe Controversy Penalty 🧊</label><input id="vibeControversyPenalty" type="number" min="0" max="0.9" step="0.05" value="0.25"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="When Vibe is on: insight *= (1 + x). 0.20 = +20%."><label>Vibe Insight Boost 🧠✨</label><input id="vibeInsightBoost" type="number" min="0" max="1" step="0.05" value="0.20"></div>
+      <div class="tooltip" data-title="When Vibe is on: commentProb *= (1 + x). 0.20 adds 20% more comments."><label>Vibe Comment Boost 💬⬆️</label><input id="vibeCommentBoost" type="number" min="0" max="1" step="0.05" value="0.20"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Platform boost for Vibe-on posts applied to REACH: reach *= (1 + x). 0 = no boost; 0.10 = +10% reach."><label>Vibe Reach Boost 🚀</label><input id="vibeReachBoost" type="number" min="-0.5" max="1" step="0.05" value="0.10"></div>
+      <div class="tooltip" data-title="Follower sensitivity: only posts with reward > (threshold × ref) get follower gains. 1.0 ~ average; 1.3 means ‘only top 30%+’ posts grow."><label>Follow Gain Threshold ⭐</label><input id="followGainThresh" type="number" min="0.5" max="2.0" step="0.05" value="1.30"></div>
+    </div>
+
+    <div class="section-title">🌐 Network & Homophily</div>
+    <div class="row">
+      <div class="tooltip" data-title="Initial mean followers drawn from a noisy normal distribution."><label>Initial Followers Mean 👣</label><input id="followersMean" type="number" min="0" max="100000" step="10" value="200"></div>
+      <div class="tooltip" data-title="Diminishing returns: reach *= (1 + factor·log10(1+followers)). 0.10–0.25 typical."><label>Follower→Reach Factor 📈</label><input id="followerReachFactor" type="number" min="0" max="1" step="0.01" value="0.15"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Larger K ⇒ more local (follower) views before global spillover."><label>Global Audience K 🌍</label><input id="globalAudienceK" type="number" min="10" max="100000" step="10" value="4000"></div>
+      <div class="tooltip" data-title="Tilt local audience toward agreement. 0=no bubble; 1=strong bubble."><label>Homophily Strength 🫧</label><input id="homophilyStrength" type="number" min="0" max="1" step="0.05" value="0.35"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="After this many exposures, the audience becomes more global (local share floored by Local Audience Floor)."><label>Virality Threshold 🔥</label><input id="viralityThreshold" type="number" min="1" max="20000" step="50" value="1500"></div>
+      <div class="tooltip" data-title="Floor for local audience share in viral phase (0–1)."><label>Local Audience Floor 🧲</label><input id="localFloor" type="number" min="0" max="1" step="0.05" value="0.20"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Follower gain per reward unit (only applied if reward clears the gain threshold)."><label>Follow Gain Rate ➕</label><input id="followGainRate" type="number" min="0" max="5" step="0.05" value="0.25"></div>
+      <div class="tooltip" data-title="Follower loss scales with bait ratio above half the threshold."><label>Follow Loss Rate ➖</label><input id="followLossRate" type="number" min="0" max="5" step="0.05" value="0.30"></div>
+    </div>
+
+    <div class="section-title">🎯 Reaction Weights (base blend)</div>
+    <div class="row">
+      <div class="tooltip" data-title="Base utility weight for Strong Agree in reward. Type-specific utilities are blended 50/50 with these."><label>Strong Agree 💚</label><input id="wSA" type="number" min="-2" max="3" step="0.1" value="1.0"></div>
+      <div class="tooltip" data-title="Base utility for Agree."><label>Agree 👍</label><input id="wA" type="number" min="-2" max="3" step="0.1" value="0.8"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Base utility for Not Sure (can be positive if you want to reward nuance)."><label>Not Sure 🤔</label><input id="wNS" type="number" min="-2" max="3" step="0.1" value="0.2"></div>
+      <div class="tooltip" data-title="Base utility for Disagree."><label>Disagree 👎</label><input id="wD" type="number" min="-2" max="3" step="0.1" value="0.0"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Base utility for Strong Disagree. Negative usually."><label>Strong Disagree 💔</label><input id="wSD" type="number" min="-2" max="3" step="0.1" value="-0.6"></div>
+      <div class="tooltip" data-title="Moving averages use the last 10 rounds automatically on all visible series."><label>Moving Avg (fixed) 📉</label><input id="maWindow" type="number" min="2" max="50" step="1" value="10" disabled></div>
+    </div>
+
+    <div class="section-title">🧪 Post Attribute Boosts (−1 to +1)</div>
+    <div class="row">
+      <div class="tooltip" data-title="Multiply humor by (1 + x). −1..+1. Set negative to de-boost."><label>Boost Humor 😹</label><input id="boostHumor" type="number" min="-1" max="1" step="0.05" value="0.00"></div>
+      <div class="tooltip" data-title="Multiply insight by (1 + x)."><label>Boost Insight 🧠</label><input id="boostInsight" type="number" min="-1" max="1" step="0.05" value="0.00"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Multiply bait by (1 + x). Use negative to de-boost bait."><label>Boost Bait 🪤</label><input id="boostBait" type="number" min="-1" max="1" step="0.05" value="0.00"></div>
+      <div class="tooltip" data-title="Multiply controversy by (1 + x)."><label>Boost Controversy 🌶️</label><input id="boostControversy" type="number" min="-1" max="1" step="0.05" value="0.00"></div>
+    </div>
+    <div class="row">
+      <div class="tooltip" data-title="Multiply news by (1 + x)."><label>Boost News 📰</label><input id="boostNews" type="number" min="-1" max="1" step="0.05" value="0.00"></div>
+      <div class="tooltip" data-title="Multiply dunk by (1 + x)."><label>Boost Dunk 🏀</label><input id="boostDunk" type="number" min="-1" max="1" step="0.05" value="0.00"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2>🧬 User Type Mix (%)</h2>
+      <div class="row">
+        <div class="tooltip" data-title="Baseline balanced actors."><label>Normal 🙂</label><input id="pctNormal" type="number" min="0" max="100" step="1" value="55"></div>
+        <div class="tooltip" data-title="Comedy & dunks."><label>Joker 😆</label><input id="pctJoker" type="number" min="0" max="100" step="1" value="10"></div>
+      </div>
+      <div class="row">
+        <div class="tooltip" data-title="Spicy & bait-prone."><label>Troll 😈</label><input id="pctTroll" type="number" min="0" max="100" step="1" value="10"></div>
+        <div class="tooltip" data-title="Insight & news oriented."><label>Intellectual 🧐</label><input id="pctIntel" type="number" min="0" max="100" step="1" value="15"></div>
+      </div>
+      <div class="row">
+        <div class="tooltip" data-title="High news propensity, high vibe usage."><label>Journalist 📝</label><input id="pctJourno" type="number" min="0" max="100" step="1" value="10"></div>
+        <div></div>
+      </div>
+      <div class="muted">Totals auto-normalize to 100%.</div>
+    </div>
+
+    <div class="inline" style="margin-top:10px">
+      <button class="btn primary" id="runBtn">▶ Run Simulation</button>
+      <button class="btn" id="moreBtn" disabled>➕ Run 10 More Rounds</button>
+      <a class="btn" id="exportBtn" disabled>⭳ Export CSV</a>
+      <span id="status" class="muted"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📊 Results</h2>
+    <div class="kpi">
+      <div class="pill">Rounds: <span id="kRounds" class="hl">—</span></div>
+      <div class="pill">Posts: <span id="kPosts" class="hl">—</span></div>
+      <div class="pill">Avg reward: <span id="kReward" class="hl">—</span></div>
+      <div class="pill">Avg bait flags: <span id="kBait" class="hl">—</span></div>
+      <div class="pill">Total followers: <span id="kFollows" class="hl">—</span></div>
+    </div>
+
+    <div class="grid-3">
+      <div><canvas id="chartReward" class="chart-med"></canvas></div>
+      <div><canvas id="chartBait" class="chart-med"></canvas></div>
+      <div><canvas id="chartAgree" class="chart-med"></canvas></div>
+    </div>
+
+    <div class="section-title">👣 Followers Over Time (All Types)</div>
+    <canvas id="chartFollowersAll" class="chart-tall"></canvas>
+
+    <div class="section-title">👣 Followers Over Time (By Type)</div>
+    <div class="grid-5">
+      <canvas id="chartF_N" class="chart-followers"></canvas>
+      <canvas id="chartF_J" class="chart-followers"></canvas>
+      <canvas id="chartF_T" class="chart-followers"></canvas>
+      <canvas id="chartF_I" class="chart-followers"></canvas>
+      <canvas id="chartF_JO" class="chart-followers"></canvas>
+    </div>
+
+    <div class="section-title">🧬 Attributes Over Time (All Users)</div>
+    <canvas id="chartAttrsOverall" class="chart-tall"></canvas>
+
+    <div class="inline" style="margin-top:10px">
+      <label>Show by type for attribute:</label>
+      <select id="attrSelect">
+        <option value="humor">humor</option>
+        <option value="insight">insight</option>
+        <option value="bait">bait</option>
+        <option value="controversy">controversy</option>
+        <option value="news">news</option>
+        <option value="dunk">dunk</option>
+      </select>
+    </div>
+    <div class="toggle-types" id="typeToggles"></div>
+    <canvas id="chartAttrsByType" class="chart-tall" style="margin-top:8px"></canvas>
+
+    <div class="inline" style="margin-top:10px">
+      <label>Type attribute mix over time (pick one type):</label>
+      <select id="mixTypeSelect">
+        <option>Normal</option><option>Joker</option><option>Troll</option><option>Intellectual</option><option>Journalist</option>
+      </select>
+    </div>
+    <canvas id="chartTypeMix" class="chart-tall" style="margin-top:8px"></canvas>
+
+    <div class="section-title">🏷️ Vibe Usage Over Time</div>
+    <div class="grid-2">
+      <div><canvas id="chartVibeOverall" class="chart-med"></canvas></div>
+      <div><canvas id="chartVibeByType" class="chart-med"></canvas></div>
+    </div>
+
+    <div style="margin-top:14px">
+      <h3 style="margin:0 0 8px 0;font-size:14px;color:#cfeeff">Averages by User Type</h3>
+      <table id="typeTable"><thead><tr>
+        <th>Type</th><th>SA</th><th>A</th><th>NS</th><th>D</th><th>SD</th><th>Bait</th><th>Comments</th><th>Reward</th><th>Followers (avg)</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+
+    <div style="margin-top:14px">
+      <h3 style="margin:0 0 8px 0;font-size:14px;color:#cfeeff">🏆 Most Successful Post (this run)</h3>
+      <div id="bestPost" class="bestpost muted">—</div>
+    </div>
+  </div>
+</div>
+<div class="footer">Toy model for incentive tuning. Don’t overfit! © You.</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// ======= Constants & Utils =======
+const ATTRS = ["humor","insight","bait","controversy","news","dunk"];
+const USER_TYPES = ["Normal","Joker","Troll","Intellectual","Journalist"];
+const clamp01 = x => Math.max(0, Math.min(1, x));
+function randNorm(mu=0, sigma=1){ let u=0, v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
+  return mu + sigma * Math.sqrt(-2.0*Math.log(u))*Math.cos(2.0*Math.PI*v); }
+function choiceWeighted(opts, weights){ const total = weights.reduce((a,b)=>a+b,0); let r = Math.random()*total;
+  for(let i=0;i<opts.length;i++){ if((r-=weights[i]) <= 0) return opts[i]; } return opts[opts.length-1]; }
+function movingAvg(arr, w){ if(w<=1) return [...arr]; const out=[]; for(let i=0;i<arr.length;i++){ let s=0,c=0; for(let j=Math.max(0,i-w+1); j<=i; j++){ s+=arr[j]; c++; } out.push(s/c); } return out; }
+
+const TYPE_BIAS = {
+  Normal:       {humor:0.5, insight:0.5, bait:0.3, controversy:0.3, news:0.5, dunk:0.3},
+  Joker:        {humor:0.8, insight:0.3, bait:0.3, controversy:0.3, news:0.2, dunk:0.6},
+  Troll:        {humor:0.3, insight:0.1, bait:0.8, controversy:0.8, news:0.1, dunk:0.6},
+  Intellectual: {humor:0.2, insight:0.8, bait:0.1, controversy:0.2, news:0.6, dunk:0.1},
+  Journalist:   {humor:0.25, insight:0.55, bait:0.1, controversy:0.2, news:0.9, dunk:0.1},
+};
+const VIBE_PROB = { Normal:0.60, Joker:0.00, Troll:0.00, Intellectual:0.85, Journalist:0.85 };
+const TYPE_REACT_UTILITY = {
+  Normal:       {SA: 1.4, A: 1.1, NS:-0.3, D:-0.5, SD:-1.0},
+  Joker:        {SA: 1.2, A: 1.1, NS:-0.2, D:-0.4, SD:-1.0},
+  Intellectual: {SA: 0.9, A: 1.0, NS: 0.6, D: 0.6, SD:-0.7},
+  Journalist:   {SA: 0.8, A: 1.0, NS: 0.7, D: 0.7, SD:-0.7},
+  Troll:        {SA: 1.1, A:-0.6, NS:-0.8, D:-0.6, SD: 1.2},
+};
+
+// ======= Config helpers =======
+function getCfg(){
+  const g = id => document.getElementById(id);
+  const w = {
+    strong_agree:+g('wSA').value, agree:+g('wA').value, not_sure:+g('wNS').value, disagree:+g('wD').value, strong_disagree:+g('wSD').value,
+  };
+  const boosts = { humor:+g('boostHumor').value, insight:+g('boostInsight').value, bait:+g('boostBait').value, controversy:+g('boostControversy').value, news:+g('boostNews').value, dunk:+g('boostDunk').value };
+  const mix = { Normal:+g('pctNormal').value, Joker:+g('pctJoker').value, Troll:+g('pctTroll').value, Intellectual:+g('pctIntel').value, Journalist:+g('pctJourno').value };
+  return {
+    usersN:+g('users').value, rounds:+g('rounds').value, learnRate:+g('learnRate').value,
+    baitRatioThresh:+g('baitRatioThresh').value, baitPenaltyMult:+g('baitPenaltyMult').value, trollBaitMult:+g('trollBaitMult').value,
+    reachMin:+g('reachMin').value, reachMax:+g('reachMax').value, vibeFlagMult:+g('vibeFlagMult').value, polarCoupling:+g('polarCoupling').value,
+    vibeHumorPenalty:+g('vibeHumorPenalty').value, vibeControversyPenalty:+g('vibeControversyPenalty').value, vibeInsightBoost:+g('vibeInsightBoost').value, vibeCommentBoost:+g('vibeCommentBoost').value,
+    vibeReachBoost:+g('vibeReachBoost').value, followGainThresh:+g('followGainThresh').value,
+    followersMean:+g('followersMean').value, followerReachFactor:+g('followerReachFactor').value, globalAudienceK:+g('globalAudienceK').value, homophilyStrength:+g('homophilyStrength').value, viralityThreshold:+g('viralityThreshold').value, localFloor:+g('localFloor').value,
+    followGainRate:+g('followGainRate').value, followLossRate:+g('followLossRate').value, w, boosts, mix,
+    maWindow:+g('maWindow').value
+  };
+}
+
+// ======= Core mechanics =======
+function applyBoosts(eff, boosts){ const out={...eff}; for(const k of ATTRS) out[k]=clamp01(out[k]*(1+(boosts[k]||0))); return out; }
+function vibeAdjust(eff,vibe,cfg){ if(!vibe) return eff; const out={...eff}; out.humor=clamp01(out.humor*(1-cfg.vibeHumorPenalty)); out.controversy=clamp01(out.controversy*(1-cfg.vibeControversyPenalty)); out.insight=clamp01(out.insight*(1+cfg.vibeInsightBoost)); return out; }
+function reachFromAttrs(eff,minR,maxR,followerFactor,followers,vibeOn,vibeReachBoost){
+  const base=Math.floor(minR+Math.random()*(maxR-minR));
+  const positive=0.45*eff.humor+0.55*eff.insight+0.40*eff.news+0.25*eff.dunk; const penalty=0.25*eff.bait;
+  let reach=base*(0.6+1.0*positive-0.35*penalty);
+  const synergy=(eff.humor*eff.insight+eff.insight*eff.news+eff.humor*eff.news+0.6*eff.dunk*eff.humor);
+  reach*=(1+0.6*synergy);
+  reach*=(1+followerFactor*Math.log10(1+followers));
+  if(vibeOn) reach*=(1+vibeReachBoost);
+  return Math.max(5,Math.floor(reach));
+}
+function reactionProbs(eff){
+  const pos=0.45*eff.insight+0.35*eff.humor+0.35*eff.dunk; const neg=0.35*eff.controversy+0.30*eff.bait+0.15*eff.dunk; const amb=0.30*eff.controversy+0.15*eff.news;
+  let p_sa=clamp01(0.03+0.55*pos); let p_a=clamp01(0.06+0.50*(0.4*eff.humor+0.5*eff.insight+0.3*eff.news)); let p_ns=clamp01(0.02+0.35*amb-0.05*eff.insight); let p_d=clamp01(0.02+0.45*eff.controversy+0.05*eff.bait-0.05*eff.insight); let p_sd=clamp01(0.01+0.30*neg);
+  let total=p_sa+p_a+p_ns+p_d+p_sd; if(total>1){ p_sa/=total;p_a/=total;p_ns/=total;p_d/=total;p_sd/=total; }
+  return {strong_agree:p_sa,agree:p_a,not_sure:p_ns,disagree:p_d,strong_disagree:p_sd};
+}
+function applyHomophily(probs,h){ const out={...probs}; out.strong_agree*=(1+h); out.agree*=(1+0.6*h); out.disagree*=(1-0.7*h); out.strong_disagree*=(1-h); let t=out.strong_agree+out.agree+out.not_sure+out.disagree+out.strong_disagree; if(t>1){ out.strong_agree/=t; out.agree/=t; out.not_sure/=t; out.disagree/=t; out.strong_disagree/=t; } return out; }
+function baitFlagProb(eff,vibeOn,flagMult,trollMult,isTroll){ let p=0.10*eff.bait+0.08*eff.controversy+0.06*eff.dunk; if(vibeOn) p*=flagMult; if(isTroll) p*=trollMult; return clamp01(0.01+p); }
+function commentProb(eff,vibeOn,boost){ const hi=0.40*eff.controversy+0.35*eff.bait+0.30*eff.dunk; const med=0.18*(eff.humor+eff.insight+eff.news)/3; let p=clamp01(0.03+hi+med); if(vibeOn) p=clamp01(p*(1+boost)); return p; }
+function sampleReaction(probs){ const labels=["strong_agree","agree","not_sure","disagree","strong_disagree"]; const weights=labels.map(k=>probs[k]); const rem=Math.max(0,1-weights.reduce((a,b)=>a+b,0)); labels.push("none"); weights.push(rem); const total=weights.reduce((a,b)=>a+b,0); let r=Math.random()*total; for(let i=0;i<labels.length;i++){ if((r-=weights[i])<=0) return labels[i]; } return "none"; }
+function engagementScore(counts,comments,user,W){ const U=TYPE_REACT_UTILITY[user.type]; const wrBase=W.strong_agree*counts.strong_agree+W.agree*counts.agree+W.not_sure*counts.not_sure+W.disagree*counts.disagree+W.strong_disagree*counts.strong_disagree; const wrType=U.SA*counts.strong_agree+U.A*counts.agree+U.NS*counts.not_sure+U.D*counts.disagree+U.SD*counts.strong_disagree; const wr=0.5*wrBase+0.5*wrType; return user.wReact*wr + (1-user.wReact)*comments; }
+function learn(user,attrs,reward,ref){ const lr=user.learnRate; const adj=Math.tanh((reward-0.5*ref)/(0.75*ref)); for(const k of ATTRS){ user.strategy[k]=clamp01(user.strategy[k]+lr*adj*(attrs[k]-user.strategy[k])); user.strategy[k]=clamp01(0.97*user.strategy[k]+0.03*TYPE_BIAS[user.type][k]); } }
+function followerUpdate(user,counts,comments,baitFlags,cfg,interactions,reward,ref){ const baitRatio = interactions>0 ? (baitFlags/interactions) : 0; const cleared = reward > (cfg.followGainThresh * ref); const gain = cleared ? cfg.followGainRate * (2*counts.strong_agree + 1*counts.agree + 0.2*comments) : 0; const loss = cfg.followLossRate * Math.max(0, baitRatio - cfg.baitRatioThresh/2) * 10; const delta = Math.round(gain - loss); user.followers = Math.max(0, user.followers + delta); }
+
+// ======= Simulation state =======
+const Sim = { users:[], rows:[], ref:100, roundsDone:0, cfg:null, seriesReward:[], seriesBait:[], seriesAttrs:[], seriesAttrsByType:{}, seriesFollowersByType:{}, seriesFollowersAll:[], seriesVibeOverall:[], seriesVibeByType:{}, best:null };
+
+function buildUsers(n,mix,learnRate,followersMean){ const entries=Object.entries(mix); const total=entries.reduce((a,[,v])=>a+v,0)||1; const weights=entries.map(([,v])=>v/total); const labels=entries.map(([k])=>k); const users=[]; for(let i=0;i<n;i++){ const t=choiceWeighted(labels,weights); const strat={}; for(const k of ATTRS) strat[k]=clamp01(TYPE_BIAS[t][k]+randNorm(0,0.08)); users.push({ id:i, type:t, strategy:strat, wReact:clamp01(0.5+Math.random()*0.4), learnRate, followers:Math.max(0,Math.round(Math.max(0,randNorm(followersMean,followersMean*0.5)))) }); } return users; }
+
+function startSimulation(cfg){ Sim.users=buildUsers(cfg.usersN,cfg.mix,cfg.learnRate,cfg.followersMean); Sim.rows=[]; Sim.ref=100; Sim.roundsDone=0; Sim.cfg=cfg; Sim.seriesReward=[]; Sim.seriesBait=[]; Sim.seriesAttrs=[]; Sim.seriesAttrsByType={}; Sim.seriesFollowersByType={}; Sim.seriesFollowersAll=[]; Sim.seriesVibeOverall=[]; Sim.seriesVibeByType={}; Sim.best=null; for(const t of USER_TYPES){ Sim.seriesAttrsByType[t]=[]; Sim.seriesFollowersByType[t]=[]; Sim.seriesVibeByType[t]=[]; } runRounds(cfg.rounds); }
+
+function runRounds(n){ const cfg=Sim.cfg; for(let r=0;r<n;r++){ const roundIndex=Sim.roundsDone+r; let rewardSum=0, baitSum=0, count=0; const attrSum={humor:0,insight:0,bait:0,controversy:0,news:0,dunk:0,n:0}; const attrSumByType={}; for(const t of USER_TYPES) attrSumByType[t]={humor:0,insight:0,bait:0,controversy:0,news:0,dunk:0,n:0}; let vibeOnCount=0; const vibeOnByType={}, postsByType={}; USER_TYPES.forEach(t=>{vibeOnByType[t]=0;postsByType[t]=0;});
+
+  for(const u of Sim.users){ const attrs={}; for(const k of ATTRS){ const base=0.85*u.strategy[k]+0.15*TYPE_BIAS[u.type][k]; attrs[k]=clamp01(randNorm(base,0.12)); }
+    const vibeOn = Math.random() < (u.type==='Joker'||u.type==='Troll' ? 0 : (VIBE_PROB[u.type]||0.6));
+    let eff = {...attrs}; eff = vibeAdjust(eff, vibeOn, cfg); eff = applyBoosts(eff, cfg.boosts);
+    const reachBudget = reachFromAttrs(eff, cfg.reachMin, cfg.reachMax, cfg.followerReachFactor, u.followers, vibeOn, cfg.vibeReachBoost);
+    let probsBase = reactionProbs(eff);
+    let baitP = baitFlagProb(eff, vibeOn, cfg.vibeFlagMult, cfg.trollBaitMult, u.type==='Troll');
+    let commentP = commentProb(eff, vibeOn, cfg.vibeCommentBoost);
+
+    const counts={strong_agree:0,agree:0,not_sure:0,disagree:0,strong_disagree:0}; let baitFlags=0, comments=0; let interactions=0; let penalty=false;
+
+    for(let i=0;i<reachBudget;i++){
+      let localShare = u.followers / (u.followers + cfg.globalAudienceK);
+      if(i > cfg.viralityThreshold) localShare = Math.max(cfg.localFloor, 0.3*localShare);
+      const isLocal = Math.random() < localShare;
+      let probs = isLocal ? applyHomophily(probsBase, cfg.homophilyStrength) : {...probsBase};
+      // polarization coupling
+      const seen = Math.max(1, interactions);
+      const saRatio = counts.strong_agree/seen; const sdRatio = counts.strong_disagree/seen; const pc = cfg.polarCoupling;
+      probs.strong_disagree = clamp01(probs.strong_disagree + pc*saRatio);
+      probs.strong_agree = clamp01(probs.strong_agree + pc*sdRatio);
+      let tot = probs.strong_agree+probs.agree+probs.not_sure+probs.disagree+probs.strong_disagree; if(tot>1){ probs.strong_agree/=tot; probs.agree/=tot; probs.not_sure/=tot; probs.disagree/=tot; probs.strong_disagree/=tot; }
+
+      if(Math.random() < baitP) baitFlags++;
+      interactions += 1;
+      const reactCount = counts.strong_agree+counts.agree+counts.not_sure+counts.disagree+counts.strong_disagree+comments;
+      const baitRatio = baitFlags/Math.max(1, reactCount);
+      if(!penalty && baitRatio >= cfg.baitRatioThresh) penalty = true;
+      if(penalty){ for(const k of ['strong_agree','agree','not_sure','disagree','strong_disagree']) probs[k]*=cfg.baitPenaltyMult; commentP*=cfg.baitPenaltyMult; }
+
+      const rlab = sampleReaction(probs); if(rlab!=='none') counts[rlab]++;
+      if(Math.random()<commentP) comments++;
+    }
+
+    const reward = engagementScore(counts, comments, u, cfg.w);
+    Sim.ref = 0.98*Sim.ref + 0.02*Math.max(1, reward);
+    learn(u, attrs, reward, Sim.ref);
+    followerUpdate(u, counts, comments, baitFlags, cfg, interactions, reward, Sim.ref);
+
+    const row = { round:roundIndex, user_id:u.id, user_type:u.type, vibe_on:vibeOn, followers:u.followers, ...attrs,
+      strong_agree:counts.strong_agree, agree:counts.agree, not_sure:counts.not_sure, disagree:counts.disagree, strong_disagree:counts.strong_disagree, bait_flags:baitFlags, comments, reward };
+    Sim.rows.push(row);
+    if(!Sim.best || row.reward > Sim.best.reward) Sim.best = row;
+
+    rewardSum += reward; baitSum += baitFlags; count++;
+    for(const k of ATTRS) attrSum[k]+=attrs[k]; attrSum.n++;
+    for(const k of ATTRS) attrSumByType[u.type][k]+=attrs[k]; attrSumByType[u.type].n++;
+    if(vibeOn) vibeOnCount++; vibeOnByType[u.type]++; postsByType[u.type]++;
+  }
+
+  Sim.seriesReward.push(rewardSum/Math.max(1,count));
+  Sim.seriesBait.push(baitSum/Math.max(1,count));
+  Sim.seriesAttrs.push(ATTRS.map(k => (attrSum[k]/Math.max(1,attrSum.n))));
+
+  let totalFollowers=0;
+  for(const t of USER_TYPES){ const list=Sim.users.filter(u=>u.type===t); const avgF=list.reduce((a,u)=>a+u.followers,0)/Math.max(1,list.length); Sim.seriesFollowersByType[t].push(avgF); totalFollowers += list.reduce((a,u)=>a+u.followers,0); }
+  Sim.seriesFollowersAll.push(totalFollowers);
+
+  Sim.seriesVibeOverall.push(vibeOnCount/Math.max(1, Sim.users.length));
+  for(const t of USER_TYPES){ const v = postsByType[t]>0 ? (vibeOnByType[t]/postsByType[t]) : 0; Sim.seriesVibeByType[t].push(v); }
+
+  for(const t of USER_TYPES){ const at=attrSumByType[t]; if(at.n>0) Sim.seriesAttrsByType[t].push(ATTRS.map(k=>at[k]/at.n)); else Sim.seriesAttrsByType[t].push(ATTRS.map(_=>0)); }
+ }
+ Sim.roundsDone += n;
+}
+
+// ======= Charts & UI =======
+let chartReward, chartBait, chartAgree, chartFollowersAll, chartAttrsOverall, chartAttrsByType, chartVibeOverall, chartVibeByType, chartTypeMix;
+let smallFollowerCharts={};
+const visibleTypes = new Set(USER_TYPES); // remember toggles
+
+function lineWithMA(elId, series, label){ const cfg=Sim.cfg; const labels=series.map((_,i)=>i+1); const ds=[{label, data:series}]; const ma=movingAvg(series, cfg.maWindow||10); ds.push({label:label+" (MA)", data:ma, borderDash:[6,4]}); const el=document.getElementById(elId); if(el._chartRef) el._chartRef.destroy(); el._chartRef=new Chart(el,{type:'line', data:{labels,datasets:ds}, options:{responsive:true,maintainAspectRatio:false, scales:{x:{grid:{display:false}}}}}); return el._chartRef; }
+function drawAgreeChart(rows){ const agg=rows.reduce((a,r)=>{a.SA+=r.strong_agree;a.A+=r.agree;a.NS+=r.not_sure;a.D+=r.disagree;a.SD+=r.strong_disagree;return a;},{SA:0,A:0,NS:0,D:0,SD:0}); const tot=agg.SA+agg.A+agg.NS+agg.D+agg.SD; const pct=[agg.SA,agg.A,agg.NS,agg.D,agg.SD].map(x=>100*x/Math.max(1,tot)); if(chartAgree) chartAgree.destroy(); chartAgree=new Chart(document.getElementById('chartAgree'),{type:'bar',data:{labels:['SA','A','NS','D','SD'],datasets:[{label:'% of reactions',data:pct}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v+'%'}}}}}); }
+function drawFollowersSmallMultiples(){ const map={Normal:'chartF_N',Joker:'chartF_J',Troll:'chartF_T',Intellectual:'chartF_I',Journalist:'chartF_JO'}; for(const t of USER_TYPES){ const el=document.getElementById(map[t]); const series=Sim.seriesFollowersByType[t]||[]; const labels=series.map((_,i)=>i+1); const ds=[{label:t,data:series},{label:t+' (MA)',data:movingAvg(series,Sim.cfg.maWindow||10),borderDash:[6,4]}]; if(el._chartRef) el._chartRef.destroy(); el._chartRef=new Chart(el,{type:'line', data:{labels,datasets:ds}, options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}}}}}); smallFollowerCharts[t]=el._chartRef; } }
+function drawAttrsOverall(){ const labels=Sim.seriesReward.map((_,i)=>i+1); const ds=[]; ATTRS.forEach((k,idx)=>{ const s=Sim.seriesAttrs.map(a=>a[idx]); ds.push({label:k,data:s}); ds.push({label:k+' (MA)',data:movingAvg(s,Sim.cfg.maWindow||10),borderDash:[6,4]}); }); if(chartAttrsOverall) chartAttrsOverall.destroy(); chartAttrsOverall=new Chart(document.getElementById('chartAttrsOverall'),{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}}}}}); }
+function drawAttrsByType(attr){ const idx=ATTRS.indexOf(attr); const labels=Sim.seriesReward.map((_,i)=>i+1); const ds=[]; USER_TYPES.forEach(t=>{ const s=(Sim.seriesAttrsByType[t]||[]).map(a=>a[idx]); const on=visibleTypes.has(t); ds.push({label:t, data:s, hidden:!on}); ds.push({label:t+' (MA)', data:movingAvg(s,Sim.cfg.maWindow||10), borderDash:[6,4], hidden:!on}); }); if(chartAttrsByType) chartAttrsByType.destroy(); chartAttrsByType=new Chart(document.getElementById('chartAttrsByType'),{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}}}}}); }
+function drawTypeMix(type){ const labels=Sim.seriesReward.map((_,i)=>i+1); const ds=[]; const series=Sim.seriesAttrsByType[type]||[]; ATTRS.forEach((k,idx)=>{ const s=series.map(a=>a[idx]); ds.push({label:k,data:s}); ds.push({label:k+' (MA)',data:movingAvg(s,Sim.cfg.maWindow||10),borderDash:[6,4]}); }); if(chartTypeMix) chartTypeMix.destroy(); chartTypeMix=new Chart(document.getElementById('chartTypeMix'),{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}}}}}); }
+function drawVibeCharts(){ chartVibeOverall=lineWithMA('chartVibeOverall',Sim.seriesVibeOverall,'Vibe Usage (overall)'); const labels=(Sim.seriesVibeByType[USER_TYPES[0]]||[]).map((_,i)=>i+1); const ds=[]; USER_TYPES.forEach(t=>{ const s=Sim.seriesVibeByType[t]||[]; ds.push({label:t,data:s}); ds.push({label:t+' (MA)',data:movingAvg(s,Sim.cfg.maWindow||10),borderDash:[6,4]}); }); if(chartVibeByType) chartVibeByType.destroy(); chartVibeByType=new Chart(document.getElementById('chartVibeByType'),{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false}}}}}); }
+
+function typeToggleUI(){ const wrap=document.getElementById('typeToggles'); wrap.innerHTML=''; USER_TYPES.forEach(t=>{ const id='tt_'+t; const lab=document.createElement('label'); const cb=document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=visibleTypes.has(t); cb.addEventListener('change',()=>{ if(cb.checked) visibleTypes.add(t); else visibleTypes.delete(t); drawAttrsByType(document.getElementById('attrSelect').value); }); lab.appendChild(cb); lab.appendChild(document.createTextNode(' '+t)); wrap.appendChild(lab); }); }
+
+function fillTypeTable(rows){ const grp={}; for(const r of rows){ if(!grp[r.user_type]) grp[r.user_type]={n:0,SA:0,A:0,NS:0,D:0,SD:0,BF:0,C:0,R:0,F:0}; const g=grp[r.user_type]; g.n++; g.SA+=r.strong_agree; g.A+=r.agree; g.NS+=r.not_sure; g.D+=r.disagree; g.SD+=r.strong_disagree; g.BF+=r.bait_flags; g.C+=r.comments; g.R+=r.reward; g.F+=r.followers; } const tb=document.querySelector('#typeTable tbody'); tb.innerHTML=''; USER_TYPES.forEach(t=>{ if(!grp[t]) return; const g=grp[t]; const tr=document.createElement('tr'); tr.innerHTML=`<td>${t}</td><td>${(g.SA/g.n).toFixed(2)}</td><td>${(g.A/g.n).toFixed(2)}</td><td>${(g.NS/g.n).toFixed(2)}</td><td>${(g.D/g.n).toFixed(2)}</td><td>${(g.SD/g.n).toFixed(2)}</td><td>${(g.BF/g.n).toFixed(2)}</td><td>${(g.C/g.n).toFixed(2)}</td><td>${(g.R/g.n).toFixed(2)}</td><td>${Math.round(g.F/g.n).toLocaleString()}</td>`; tb.appendChild(tr); }); }
+
+function updateBestPost(){ const b=Sim.best; const el=document.getElementById('bestPost'); if(!b){ el.textContent='—'; return; } const reactTot=b.strong_agree+b.agree+b.not_sure+b.disagree+b.strong_disagree; el.innerHTML = `
+  <div class="kv"><div class="key">User Type</div><div>${b.user_type}${b.vibe_on?' <span class="badge">Vibe 🏷️</span>':''}</div>
+  <div class="key">Reward</div><div>${b.reward.toFixed(2)}</div>
+  <div class="key">Reactions</div><div>SA ${b.strong_agree}, A ${b.agree}, NS ${b.not_sure}, D ${b.disagree}, SD ${b.strong_disagree} (total ${reactTot})</div>
+  <div class="key">Comments</div><div>${b.comments}</div>
+  <div class="key">Bait Flags</div><div>${b.bait_flags}</div>
+  <div class="key">Attrs</div><div>humor ${b.humor.toFixed(2)}, insight ${b.insight.toFixed(2)}, bait ${b.bait.toFixed(2)}, controversy ${b.controversy.toFixed(2)}, news ${b.news.toFixed(2)}, dunk ${b.dunk.toFixed(2)}</div></div>`;
+}
+
+function updateKPIs(){ const rounds=Sim.roundsDone; const posts=Sim.rows.length; const avgReward=(Sim.seriesReward.reduce((a,b)=>a+b,0)/Math.max(1,Sim.seriesReward.length)).toFixed(2); const avgBait=(Sim.seriesBait.reduce((a,b)=>a+b,0)/Math.max(1,Sim.seriesBait.length)).toFixed(2); const totalFollowers=Sim.users.reduce((a,u)=>a+u.followers,0); document.getElementById('kRounds').textContent=rounds; document.getElementById('kPosts').textContent=posts.toLocaleString(); document.getElementById('kReward').textContent=avgReward; document.getElementById('kBait').textContent=avgBait; document.getElementById('kFollows').textContent=totalFollowers.toLocaleString(); }
+
+function rowsToCSV(rows){ const cols=Object.keys(rows[0]||{a:1}); const head=cols.join(','); const lines=rows.map(r=> cols.map(c=> String(r[c]).replaceAll('"','""')).join(',')); return head+'\n'+lines.join('\n'); }
+
+// ======= Buttons =======
+document.getElementById('runBtn').addEventListener('click',()=>{ const status=document.getElementById('status'); status.textContent='Running...'; setTimeout(()=>{ const cfg=getCfg(); startSimulation(cfg);
+  lineWithMA('chartReward',Sim.seriesReward,'Avg Reward'); lineWithMA('chartBait',Sim.seriesBait,'Avg Bait Flags'); drawAgreeChart(Sim.rows);
+  chartFollowersAll = lineWithMA('chartFollowersAll',Sim.seriesFollowersAll,'Total Followers'); drawFollowersSmallMultiples();
+  drawAttrsOverall(); typeToggleUI(); drawAttrsByType(document.getElementById('attrSelect').value); drawTypeMix(document.getElementById('mixTypeSelect').value);
+  drawVibeCharts(); fillTypeTable(Sim.rows); updateKPIs(); updateBestPost();
+  const csv=rowsToCSV(Sim.rows); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const btn=document.getElementById('exportBtn'); btn.href=url; btn.download='discourse_sim_results.csv'; btn.removeAttribute('disabled'); document.getElementById('moreBtn').removeAttribute('disabled'); status.textContent='Done ✅'; },10); });
+
+document.getElementById('moreBtn').addEventListener('click',()=>{ const status=document.getElementById('status'); status.textContent='Running 10 more…'; setTimeout(()=>{ runRounds(10);
+  lineWithMA('chartReward',Sim.seriesReward,'Avg Reward'); lineWithMA('chartBait',Sim.seriesBait,'Avg Bait Flags'); drawAgreeChart(Sim.rows);
+  lineWithMA('chartFollowersAll',Sim.seriesFollowersAll,'Total Followers'); drawFollowersSmallMultiples();
+  drawAttrsOverall(); drawAttrsByType(document.getElementById('attrSelect').value); drawTypeMix(document.getElementById('mixTypeSelect').value);
+  drawVibeCharts(); fillTypeTable(Sim.rows); updateKPIs(); updateBestPost();
+  const csv=rowsToCSV(Sim.rows); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const btn=document.getElementById('exportBtn'); btn.href=url; btn.download='discourse_sim_results.csv'; status.textContent='Extended ✅'; },10); });
+
+document.getElementById('attrSelect').addEventListener('change', e=>{ drawAttrsByType(e.target.value); });
+document.getElementById('mixTypeSelect').addEventListener('change', e=>{ drawTypeMix(e.target.value); });
+</script>
+</body>
+</html>
