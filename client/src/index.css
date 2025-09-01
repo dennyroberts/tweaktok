@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(222, 84%, 5%);
+  --foreground: hsl(213, 31%, 91%);
+  --card: hsl(222, 47%, 11%);
+  --card-foreground: hsl(213, 31%, 91%);
+  --popover: hsl(222, 47%, 11%);
+  --popover-foreground: hsl(213, 31%, 91%);
+  --primary: hsl(193, 100%, 76%);
+  --primary-foreground: hsl(222, 47%, 11%);
+  --secondary: hsl(217, 33%, 17%);
+  --secondary-foreground: hsl(213, 31%, 91%);
+  --muted: hsl(217, 33%, 17%);
+  --muted-foreground: hsl(217, 24%, 59%);
+  --accent: hsl(193, 100%, 76%);
+  --accent-foreground: hsl(222, 47%, 11%);
+  --destructive: hsl(0, 63%, 77%);
+  --destructive-foreground: hsl(213, 31%, 91%);
+  --border: hsl(217, 33%, 17%);
+  --input: hsl(217, 33%, 17%);
+  --ring: hsl(193, 100%, 76%);
+  --chart-1: hsl(193, 100%, 76%);
+  --chart-2: hsl(127, 65%, 70%);
+  --chart-3: hsl(42, 100%, 77%);
+  --chart-4: hsl(0, 100%, 77%);
+  --chart-5: hsl(215, 100%, 74%);
+  --sidebar: hsl(222, 47%, 11%);
+  --sidebar-foreground: hsl(213, 31%, 91%);
+  --sidebar-primary: hsl(193, 100%, 76%);
+  --sidebar-primary-foreground: hsl(222, 47%, 11%);
+  --sidebar-accent: hsl(217, 33%, 17%);
+  --sidebar-accent-foreground: hsl(193, 100%, 76%);
+  --sidebar-border: hsl(217, 33%, 17%);
+  --sidebar-ring: hsl(193, 100%, 76%);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 0.875rem;
+
+  /* Custom simulation theme colors */
+  --sim-accent: hsl(193, 100%, 76%);
+  --sim-green: hsl(127, 65%, 70%);
+  --sim-orange: hsl(42, 100%, 77%);
+  --sim-red: hsl(0, 100%, 77%);
+  --sim-blue: hsl(215, 100%, 74%);
+  --sim-pink: hsl(326, 100%, 80%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased text-foreground;
+    background: linear-gradient(180deg, hsl(222, 84%, 5%) 0%, hsl(220, 69%, 7%) 60%, hsl(222, 84%, 5%) 100%);
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(217, 33%, 17%);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(217, 24%, 59%);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(193, 100%, 76%);
+  }
+
+  /* Input focus states */
+  input:focus, select:focus {
+    outline: none;
+    border-color: hsl(193, 100%, 76%);
+    box-shadow: 0 0 0 2px hsl(193, 100%, 76%, 0.2);
+  }
+
+  /* Table styling */
+  table {
+    font-size: 13px;
+  }
+  
+  th, td {
+    border-bottom: 1px solid hsl(217, 33%, 17%);
+    padding: 8px;
+    text-align: right;
+  }
+  
+  th:first-child, td:first-child {
+    text-align: left;
+  }
+
+  th {
+    background: hsl(217, 33%, 17%);
+    font-weight: 600;
+  }
+
+  /* Chart canvas styling */
+  canvas {
+    background: hsl(220, 50%, 7%);
+    border-radius: 12px;
+    border: 1px solid hsl(217, 33%, 17%);
+  }
+}
+
+/* Tooltip styles */
+.tooltip[data-title] {
+  position: relative;
+}
+
+.tooltip[data-title]::after {
+  content: attr(data-title);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  background: hsl(222, 47%, 11%);
+  border: 1px solid hsl(217, 33%, 17%);
+  color: hsl(213, 31%, 91%);
+  padding: 12px 16px;
+  border-radius: 12px;
+  min-width: 220px;
+  max-width: 460px;
+  white-space: normal;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+  z-index: 50;
+  font-size: 12px;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .simulation-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .parameter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
