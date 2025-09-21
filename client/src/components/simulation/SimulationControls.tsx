@@ -4,17 +4,96 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimulationConfig } from "@/lib/simulation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 
 interface SimulationControlsProps {
   config: SimulationConfig;
-  setConfig: (config: SimulationConfig) => void;
+  setConfig: (config: SimulationConfig | ((prev: SimulationConfig) => SimulationConfig)) => void;
   onRunSimulation: () => void;
   onExtendSimulation: () => void;
   onExportCsv: () => void;
   isRunning: boolean;
   canExtend: boolean;
 }
+
+// Move TooltipInput outside the main component to prevent recreation on re-renders
+const TooltipInput = memo(({ 
+  label, 
+  tooltip, 
+  id, 
+  value, 
+  onChange, 
+  min, 
+  max, 
+  step = 0.01,
+  type = "number"
+}: {
+  label: string;
+  tooltip: string;
+  id: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  type?: string;
+}) => {
+  const [localValue, setLocalValue] = useState(value.toString());
+  
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+    
+    // Only update parent state if we have a valid number
+    const num = parseFloat(val);
+    if (!isNaN(num) && val !== '' && val !== '-' && val !== '.') {
+      onChange(num);
+    }
+  }, [onChange]);
+  
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const num = parseFloat(val);
+    
+    if (isNaN(num) || val === '' || val === '-' || val === '.') {
+      // Reset to parent value if invalid
+      setLocalValue(value.toString());
+    } else {
+      // Ensure parent state is updated and format the display
+      onChange(num);
+      setLocalValue(num.toString());
+    }
+  }, [onChange, value]);
+  
+  // Update local value when parent value changes
+  const handleFocus = useCallback(() => {
+    setLocalValue(value.toString());
+  }, [value]);
+  
+  return (
+    <div>
+      <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-1">
+        {label}
+      </Label>
+      <div className="text-xs text-muted-foreground mb-2 leading-relaxed">
+        {tooltip}
+      </div>
+      <Input
+        id={id}
+        data-testid={`input-${id}`}
+        type={type}
+        min={min}
+        max={max}
+        step={step}
+        value={localValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        className="w-full bg-input border-border text-foreground"
+      />
+    </div>
+  );
+});
 
 export default function SimulationControls({
   config,
@@ -25,19 +104,20 @@ export default function SimulationControls({
   isRunning,
   canExtend
 }: SimulationControlsProps) {
-  const updateConfig = (key: keyof SimulationConfig, value: any) => {
-    setConfig({ ...config, [key]: value });
-  };
+  // Use functional updates to prevent unnecessary re-renders
+  const updateConfig = useCallback((key: keyof SimulationConfig, value: any) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+  }, [setConfig]);
 
-  const updateNestedConfig = (parent: string, key: string, value: number) => {
-    setConfig({
-      ...config,
+  const updateNestedConfig = useCallback((parent: string, key: string, value: number) => {
+    setConfig(prev => ({
+      ...prev,
       [parent]: {
-        ...(config[parent as keyof SimulationConfig] as any),
+        ...(prev[parent as keyof SimulationConfig] as any),
         [key]: value
       }
-    });
-  };
+    }));
+  }, [setConfig]);
 
   const TooltipInput = ({ 
     label, 
