@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SimulationConfig } from "@/lib/simulation";
 import { useState, useCallback } from "react";
 
@@ -94,10 +93,13 @@ export default function SimulationControls({
     }, [value]);
     
     return (
-      <div className="tooltip relative" data-title={tooltip}>
-        <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-2">
+      <div>
+        <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-1">
           {label}
         </Label>
+        <div className="text-xs text-muted-foreground mb-2 leading-relaxed">
+          {tooltip}
+        </div>
         <Input
           id={id}
           data-testid={`input-${id}`}
