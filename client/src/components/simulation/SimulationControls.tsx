@@ -42,26 +42,128 @@ const StableInput = memo(function StableInput({
 }) {
   // Use a stable ref to maintain the same input element
   const inputRef = useRef<HTMLInputElement>(null);
-  const [internalValue, setInternalValue] = useState(value.toString());
+  const [text, setText] = useState(value.toString());
+  const [isFocused, setIsFocused] = useState(false);
 
-  // Only update when external value actually changes
+  // Helper functions
+  const isValidPartial = useCallback((s: string) => {
+    // Allow empty, negative sign, digits, and one decimal point
+    return /^-?\d*\.?\d*$/.test(s) && (s.match(/\./g) || []).length <= 1;
+  }, []);
+  
+  const parseDecimal = useCallback((s: string) => {
+    if (s === '' || s === '-' || s === '.') return NaN;
+    return parseFloat(s);
+  }, []);
+  
+  const clamp = useCallback((n: number, min: number, max: number) => {
+    return Math.max(min, Math.min(max, n));
+  }, []);
+  
+  const quantize = useCallback((n: number, step: number) => {
+    return Math.round(n / step) * step;
+  }, []);
+  
+  const format = useCallback((n: number) => {
+    return n.toString();
+  }, []);
+  
+  // Only sync from external value when not focused
   useEffect(() => {
-    if (value.toString() !== internalValue) {
-      setInternalValue(value.toString());
+    if (!isFocused && format(value) !== text) {
+      setText(format(value));
     }
-  }, [value, internalValue]);
+  }, [value, text, isFocused, format]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setInternalValue(newValue);
-
-    // Parse and validate without triggering immediate parent updates
-    const num = parseFloat(newValue);
-    if (!isNaN(num) && newValue.trim() !== '') {
-      // Use setTimeout to batch the update and prevent immediate re-renders
-      setTimeout(() => onChange(num), 0);
+    if (isValidPartial(newValue)) {
+      setText(newValue);
     }
-  }, [onChange]);
+
+  }, [isValidPartial]);
+
+  const handleBeforeInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const data = (e as any).data;
+    
+    if (!data) return; // Allow deletions, backspace, etc.
+    
+    // Get what the text would be after this input
+    const start = input.selectionStart || 0;
+    const end = input.selectionEnd || 0;
+    const newText = text.substring(0, start) + data + text.substring(end);
+    
+    // Block if it would create an invalid partial value
+    if (!isValidPartial(newText)) {
+      e.preventDefault();
+    }
+  }, [text, isValidPartial]);
+  
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow navigation keys
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Escape'].includes(e.key)) {
+      return;
+    }
+    
+    // Allow deletion keys
+    if (['Backspace', 'Delete'].includes(e.key)) {
+      return;
+    }
+    
+    // Allow copy/paste/cut
+    if (e.ctrlKey || e.metaKey) {
+      return;
+    }
+    
+    // Handle Enter to commit
+    if (e.key === 'Enter') {
+      inputRef.current?.blur();
+      return;
+    }
+    
+    // Block invalid characters
+    if (!/^[\d.-]$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    
+    // Additional validation for special characters
+    const input = e.target as HTMLInputElement;
+    const start = input.selectionStart || 0;
+    const end = input.selectionEnd || 0;
+    const newText = text.substring(0, start) + e.key + text.substring(end);
+    
+    if (!isValidPartial(newText)) {
+      e.preventDefault();
+    }
+  }, [text, isValidPartial]);
+  
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+  }, []);
+  
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+    
+    // Parse and commit the value
+    const parsed = parseDecimal(text);
+    if (!isNaN(parsed)) {
+      let committed = clamp(parsed, min, max);
+      if (step !== 0.01) { // Only quantize if step is explicitly set to something other than default
+        committed = quantize(committed, step);
+      }
+      const formatted = format(committed);
+      setText(formatted);
+      onChange(committed);
+    } else if (text === '') {
+      // If empty, don't commit anything - keep the field empty
+      // This prevents auto-restoring the previous value
+    } else {
+      // Invalid text, restore to current value
+      setText(format(value));
+    }
+  }, [text, parseDecimal, clamp, min, max, quantize, step, format, onChange, value]);
 
   return (
     <div>
@@ -79,12 +181,15 @@ const StableInput = memo(function StableInput({
         ref={inputRef}
         id={id}
         data-testid={`input-${id}`}
-        type={type}
-        min={min}
-        max={max}
-        step={step}
-        value={internalValue}
+        type="text"
+        inputMode="decimal"
+        pattern="[0-9]*[.,]?[0-9]*"
+        value={text}
+        onBeforeInput={handleBeforeInput}
+        onKeyDown={handleKeyDown}
         onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         className="w-full bg-input border-border text-foreground"
       />
     </div>
