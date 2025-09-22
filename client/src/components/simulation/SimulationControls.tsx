@@ -160,7 +160,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Rounds (initial) 🔁"
-              tooltip="How many posting rounds to simulate on Run. Use ➕ to extend later."
+              tooltip="How many posting rounds to simulate on Run. Use ➕ to extend later. Higher values = longer initial simulation runs. Lower values = shorter runs (extend manually as needed)."
               id="rounds"
               value={localConfig.rounds}
               onChange={(value) => updateLocalConfig('rounds', Math.round(value))}
@@ -182,7 +182,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Bait Ratio Threshold 🚩"
-              tooltip="Users can flag posts as 'bait' (low-quality engagement farming). If enough people agree a post is bait (ratio crosses this threshold), we reduce that post's engagement reach. Think of it as community-driven content moderation."
+              tooltip="Users can flag posts as 'bait' (low-quality engagement farming). If enough people agree a post is bait (ratio crosses this threshold), we reduce that post's engagement reach. Think of it as community-driven content moderation. Higher values = harder to flag posts as bait (less sensitive). Lower values = easier to flag posts as bait (more sensitive)."
               id="baitRatioThresh"
               value={localConfig.baitRatioThresh}
               onChange={(value) => updateLocalConfig('baitRatioThresh', value)}
@@ -207,7 +207,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Base Reach Min 📡"
-              tooltip="Base exposure budget per post before attribute/follower effects."
+              tooltip="Base exposure budget per post before attribute/follower effects. Higher values = posts get shown to more people initially. Lower values = posts have limited initial exposure."
               id="reachMin"
               value={localConfig.reachMin}
               onChange={(value) => updateLocalConfig('reachMin', Math.round(value))}
@@ -217,7 +217,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Base Reach Max 📡"
-              tooltip="Upper bound for base exposure before effects."
+              tooltip="Upper bound for base exposure before effects. Higher values = allow posts to reach larger audiences. Lower values = cap maximum post exposure."
               id="reachMax"
               value={localConfig.reachMax}
               onChange={(value) => updateLocalConfig('reachMax', Math.round(value))}
@@ -230,7 +230,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Vibe Flag Multiplier 🏷️"
-              tooltip="When users add 'vibe' tags to their posts, this reduces how likely others are to flag it as bait. Think of it as a 'good faith discussion' label that provides some protection from being flagged."
+              tooltip="When users add 'vibe' tags to their posts, this reduces how likely others are to flag it as bait. Think of it as a 'good faith discussion' label that provides some protection from being flagged. Lower values = stronger protection from flagging. Higher values = weaker protection (closer to normal flagging rates)."
               id="vibeFlagMult"
               value={localConfig.vibeFlagMult}
               onChange={(value) => updateLocalConfig('vibeFlagMult', value)}
@@ -240,7 +240,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Polarization Coupling ⚖️"
-              tooltip="Controls how much extreme reactions (strong agree/disagree) encourage more extreme reactions from others. Higher values create more polarized discussions where moderate responses become less common."
+              tooltip="Controls how much extreme reactions (strong agree/disagree) encourage more extreme reactions from others. Higher values = more polarized discussions (extreme reactions breed more extreme reactions). Lower values = weaker polarization coupling (moderate responses stay common)."
               id="polarCoupling"
               value={localConfig.polarCoupling}
               onChange={(value) => updateLocalConfig('polarCoupling', value)}
@@ -268,7 +268,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Vibe Humor Penalty 🤐"
-              tooltip="When Vibe is on: humor *= (1 − x). 0.15 reduces humor by 15% to steer earnest tone."
+              tooltip="When Vibe is on: humor *= (1 − x). 0.15 reduces humor by 15% to steer earnest tone. Higher values = less humor in vibe posts (more serious). Lower values = humor mostly preserved (more playful)."
               id="vibeHumorPenalty"
               value={localConfig.vibeHumorPenalty}
               onChange={(value) => updateLocalConfig('vibeHumorPenalty', value)}
@@ -278,7 +278,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Vibe Controversy Penalty 🧊"
-              tooltip="When Vibe is on: controversy *= (1 − x). 0.25 trims spiciness by 25%."
+              tooltip="When Vibe is on: controversy *= (1 − x). 0.25 trims spiciness by 25%. Higher values = less controversial content in vibe posts (more civil). Lower values = controversy mostly preserved (more spicy)."
               id="vibeControversyPenalty"
               value={localConfig.vibeControversyPenalty}
               onChange={(value) => updateLocalConfig('vibeControversyPenalty', value)}
@@ -291,7 +291,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Vibe Insight Boost 🧠✨"
-              tooltip="When Vibe is on: insight *= (1 + x). 0.20 = +20%."
+              tooltip="When Vibe is on: insight *= (1 + x). 0.20 = +20%. Higher values = much more insightful content in vibe posts. Lower values = smaller insight boost (closer to normal)."
               id="vibeInsightBoost"
               value={localConfig.vibeInsightBoost}
               onChange={(value) => updateLocalConfig('vibeInsightBoost', value)}
@@ -301,7 +301,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Vibe Comment Boost 💬⬆️"
-              tooltip="When Vibe is on: commentProb *= (1 + x). 0.20 adds 20% more comments."
+              tooltip="When Vibe is on: commentProb *= (1 + x). 0.20 adds 20% more comments. Higher values = much more likely to generate comments in vibe posts. Lower values = smaller comment boost (closer to normal)."
               id="vibeCommentBoost"
               value={localConfig.vibeCommentBoost}
               onChange={(value) => updateLocalConfig('vibeCommentBoost', value)}
@@ -314,7 +314,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-1 gap-4">
             <StableInput
               label="Base Vibe Probability 🎯"
-              tooltip="Starting probability for Normal users to use vibe tags. They'll learn from here. 0.05 = 5% chance initially."
+              tooltip="Starting probability for Normal users to use vibe tags. They'll learn from here. 0.05 = 5% chance initially. Higher values = users start using vibe tags more often. Lower values = users rarely use vibe tags initially (must learn through experience)."
               id="baseVibeProb"
               value={localConfig.baseVibeProb}
               onChange={(value) => updateLocalConfig('baseVibeProb', value)}
@@ -343,7 +343,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Initial Followers Mean 👣"
-              tooltip="Initial mean followers drawn from a noisy normal distribution."
+              tooltip="Initial mean followers drawn from a noisy normal distribution. Higher values = users start with more followers (bigger initial audiences). Lower values = users start with smaller follower bases (must build audiences)."
               id="followersMean"
               value={localConfig.followersMean}
               onChange={(value) => updateLocalConfig('followersMean', Math.round(value))}
@@ -353,7 +353,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Follower→Reach Factor 📈"
-              tooltip="Diminishing returns: reach *= (1 + factor·log10(1+followers)). 0.10–0.25 typical."
+              tooltip="Diminishing returns: reach *= (1 + factor·log10(1+followers)). 0.10–0.25 typical. Higher values = followers have stronger impact on post reach. Lower values = followers have weaker impact on reach (more democratic exposure)."
               id="followerReachFactor"
               value={localConfig.followerReachFactor}
               onChange={(value) => updateLocalConfig('followerReachFactor', value)}
@@ -365,7 +365,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Global Audience K 🌍"
-              tooltip="Larger K ⇒ more local (follower) views before global spillover."
+              tooltip="Larger K ⇒ more local (follower) views before global spillover. Higher values = posts stay within follower circles longer before going global. Lower values = posts reach global audience sooner (less follower-focused)."
               id="globalAudienceK"
               value={localConfig.globalAudienceK}
               onChange={(value) => updateLocalConfig('globalAudienceK', Math.round(value))}
@@ -375,7 +375,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Homophily Strength 🫧"
-              tooltip="How much users mainly see content from people who think like them. 0 = see diverse opinions, 1 = strong echo chamber where you mostly see agreement."
+              tooltip="How much users mainly see content from people who think like them. 0 = see diverse opinions, 1 = strong echo chamber where you mostly see agreement. Higher values = stronger echo chambers (less diversity). Lower values = more diverse content feeds."
               id="homophilyStrength"
               value={localConfig.homophilyStrength}
               onChange={(value) => updateLocalConfig('homophilyStrength', value)}
@@ -404,7 +404,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Strong Agree 💚"
-              tooltip="How rewarding it feels to get 'Strong Agree' reactions. Positive values make users want more strong agreement on their posts."
+              tooltip="How rewarding it feels to get 'Strong Agree' reactions. Positive values = users want more strong agreement on their posts. Negative values = users avoid posts that get strong agreement."
               id="wSA"
               value={localConfig.w.strong_agree}
               onChange={(value) => updateLocalNestedConfig('w', 'strong_agree', value)}
@@ -414,7 +414,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Agree 👍"
-              tooltip="Base utility for Agree."
+              tooltip="Base utility for Agree reactions. Positive values = users are motivated by agreement. Negative values = users avoid getting agreement. Zero = neutral (no preference)."
               id="wA"
               value={localConfig.w.agree}
               onChange={(value) => updateLocalNestedConfig('w', 'agree', value)}
@@ -427,7 +427,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Not Sure 🤔"
-              tooltip="Base utility for Not Sure (can be positive if you want to reward nuance)."
+              tooltip="Base utility for Not Sure reactions (can be positive if you want to reward nuance). Positive values = users seek nuanced, uncertain responses. Negative values = users avoid ambiguous posts. Zero = neutral."
               id="wNS"
               value={localConfig.w.not_sure}
               onChange={(value) => updateLocalNestedConfig('w', 'not_sure', value)}
@@ -437,7 +437,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Disagree 👎"
-              tooltip="Base utility for Disagree."
+              tooltip="Base utility for Disagree reactions. Positive values = users seek disagreement (contrarian behavior). Negative values = users avoid posts that get disagreement. Zero = neutral."
               id="wD"
               value={localConfig.w.disagree}
               onChange={(value) => updateLocalNestedConfig('w', 'disagree', value)}
@@ -450,7 +450,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-1 gap-4">
             <StableInput
               label="Strong Disagree 💔"
-              tooltip="Base utility for Strong Disagree. Negative usually."
+              tooltip="Base utility for Strong Disagree reactions. Negative values = users avoid posts that get strong disagreement (normal behavior). Positive values = users seek controversy and strong pushback."
               id="wSD"
               value={localConfig.w.strong_disagree}
               onChange={(value) => updateLocalNestedConfig('w', 'strong_disagree', value)}
@@ -479,7 +479,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Normal 🙂"
-              tooltip="Baseline balanced actors."
+              tooltip="Baseline balanced actors. Higher values = more normal users in the simulation. Lower values = fewer normal users (more specialized user types)."
               id="pctNormal"
               value={localConfig.mix.Normal}
               onChange={(value) => updateLocalNestedConfig('mix', 'Normal', Math.round(value))}
@@ -489,7 +489,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Joker 😆"
-              tooltip="Comedy & dunks."
+              tooltip="Comedy & dunks. Higher values = more jokers in the simulation (more humor-focused content). Lower values = fewer jokers."
               id="pctJoker"
               value={localConfig.mix.Joker}
               onChange={(value) => updateLocalNestedConfig('mix', 'Joker', Math.round(value))}
@@ -502,7 +502,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Troll 😈"
-              tooltip="Spicy & bait-prone."
+              tooltip="Spicy & bait-prone. Higher values = more trolls in the simulation (more controversial content). Lower values = fewer trolls."
               id="pctTroll"
               value={localConfig.mix.Troll}
               onChange={(value) => updateLocalNestedConfig('mix', 'Troll', Math.round(value))}
@@ -512,7 +512,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Intellectual 🧐"
-              tooltip="Insight & news oriented."
+              tooltip="Insight & news oriented. Higher values = more intellectuals in the simulation (more analytical content). Lower values = fewer intellectuals."
               id="pctIntel"
               value={localConfig.mix.Intellectual}
               onChange={(value) => updateLocalNestedConfig('mix', 'Intellectual', Math.round(value))}
@@ -525,7 +525,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-1 gap-4">
             <StableInput
               label="Journalist 📝"
-              tooltip="High news propensity, high vibe usage."
+              tooltip="High news propensity, high vibe usage. Higher values = more journalists in the simulation (more news content). Lower values = fewer journalists."
               id="pctJourno"
               value={localConfig.mix.Journalist}
               onChange={(value) => updateLocalNestedConfig('mix', 'Journalist', Math.round(value))}
@@ -555,7 +555,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Boost Humor 😹"
-              tooltip="Multiply humor by (1 + x). −1..+1. Set negative to de-boost."
+              tooltip="Multiply humor by (1 + x). −1..+1. Positive values = funnier posts get more engagement. Negative values = funny posts get less engagement (de-boost humor). Zero = no effect."
               id="boostHumor"
               value={localConfig.boosts.humor}
               onChange={(value) => updateLocalNestedConfig('boosts', 'humor', value)}
@@ -565,7 +565,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Boost Insight 🧠"
-              tooltip="Multiply insight by (1 + x)."
+              tooltip="Multiply insight by (1 + x). Positive values = insightful posts get more engagement. Negative values = insightful posts get less engagement (de-boost insights). Zero = no effect."
               id="boostInsight"
               value={localConfig.boosts.insight}
               onChange={(value) => updateLocalNestedConfig('boosts', 'insight', value)}
@@ -578,7 +578,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Boost Bait 🪤"
-              tooltip="Multiply bait by (1 + x). Use negative to de-boost bait."
+              tooltip="Multiply bait by (1 + x). Positive values = bait posts get more engagement (reward clickbait). Negative values = bait posts get less engagement (punish clickbait). Zero = no effect."
               id="boostBait"
               value={localConfig.boosts.bait}
               onChange={(value) => updateLocalNestedConfig('boosts', 'bait', value)}
@@ -588,7 +588,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Boost Controversy 🌶️"
-              tooltip="Multiply controversy by (1 + x)."
+              tooltip="Multiply controversy by (1 + x). Positive values = controversial posts get more engagement (reward controversy). Negative values = controversial posts get less engagement (discourage controversy). Zero = no effect."
               id="boostControversy"
               value={localConfig.boosts.controversy}
               onChange={(value) => updateLocalNestedConfig('boosts', 'controversy', value)}
