@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SimulationConfig } from "@/lib/simulation";
@@ -101,6 +102,7 @@ export default function SimulationControls({
 }: SimulationControlsProps) {
   // Local state for all form values - no immediate updates
   const [localConfig, setLocalConfig] = useState(config);
+  const { toast } = useToast();
   
   // Update local config when parent config changes (like on simulation start)
   useEffect(() => {
@@ -124,6 +126,105 @@ export default function SimulationControls({
   const applyChanges = useCallback(() => {
     setConfig(localConfig);
   }, [localConfig, setConfig]);
+
+  // Export configuration as JSON
+  const exportConfig = useCallback(() => {
+    try {
+      const configJson = JSON.stringify(localConfig, null, 2);
+      const blob = new Blob([configJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `simulation-config-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Configuration Exported",
+        description: "Your simulation configuration has been saved as a JSON file.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Unable to export configuration. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [localConfig, toast]);
+
+  // Import configuration from JSON file
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const importConfig = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Basic file validation
+    if (file.size > 1024 * 1024) { // 1MB limit
+      toast({
+        title: "File Too Large",
+        description: "Configuration file must be smaller than 1MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!file.type.includes('json') && !file.name.endsWith('.json')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select a valid JSON file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const configData = JSON.parse(e.target?.result as string);
+        
+        // Basic validation - check if it has expected top-level keys
+        const requiredKeys = ['usersN', 'rounds', 'learnRate', 'mix', 'w', 'boosts'];
+        const hasRequiredKeys = requiredKeys.every(key => key in configData);
+        
+        if (!hasRequiredKeys) {
+          toast({
+            title: "Invalid Configuration",
+            description: "This doesn't appear to be a valid simulation configuration file.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        setLocalConfig(configData);
+        setConfig(configData);
+        
+        toast({
+          title: "Configuration Loaded",
+          description: "Your simulation configuration has been successfully imported.",
+        });
+      } catch (error) {
+        toast({
+          title: "Import Failed",
+          description: "Unable to parse the configuration file. Please check that it's a valid JSON file.",
+          variant: "destructive",
+        });
+        console.error('Config import error:', error);
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [setConfig, toast]);
 
 
   return (
@@ -601,33 +702,64 @@ export default function SimulationControls({
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3">
-        <Button
-          data-testid="button-run-simulation"
-          onClick={onRunSimulation}
-          disabled={isRunning}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {isRunning ? '⏳ Running...' : '▶ Run Simulation'}
-        </Button>
-        
-        <Button
-          data-testid="button-extend-simulation"
-          onClick={onExtendSimulation}
-          disabled={!canExtend || isRunning}
-          variant="secondary"
-        >
-          ➕ Run 10 More Rounds
-        </Button>
-        
-        <Button
-          data-testid="button-export-csv"
-          onClick={onExportCsv}
-          disabled={!canExtend}
-          variant="outline"
-        >
-          ⭳ Export CSV
-        </Button>
+      <div className="space-y-4">
+        {/* Simulation Controls */}
+        <div className="flex flex-wrap gap-3">
+          <Button
+            data-testid="button-run-simulation"
+            onClick={onRunSimulation}
+            disabled={isRunning}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {isRunning ? '⏳ Running...' : '▶ Run Simulation'}
+          </Button>
+          
+          <Button
+            data-testid="button-extend-simulation"
+            onClick={onExtendSimulation}
+            disabled={!canExtend || isRunning}
+            variant="secondary"
+          >
+            ➕ Run 10 More Rounds
+          </Button>
+          
+          <Button
+            data-testid="button-export-csv"
+            onClick={onExportCsv}
+            disabled={!canExtend}
+            variant="outline"
+          >
+            ⭳ Export CSV
+          </Button>
+        </div>
+
+        {/* Configuration Import/Export */}
+        <div className="flex flex-wrap gap-3">
+          <Button
+            data-testid="button-export-config"
+            onClick={exportConfig}
+            variant="outline"
+          >
+            📤 Export Config
+          </Button>
+          
+          <Button
+            data-testid="button-import-config"
+            onClick={importConfig}
+            variant="outline"
+          >
+            📥 Import Config
+          </Button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleFileChange}
+            className="hidden"
+            data-testid="input-import-config"
+          />
+        </div>
       </div>
       </div>
     </TooltipProvider>
