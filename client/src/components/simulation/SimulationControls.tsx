@@ -43,18 +43,18 @@ const StableInput = memo(function StableInput({
   // Use a stable ref to maintain the same input element
   const inputRef = useRef<HTMLInputElement>(null);
   const [internalValue, setInternalValue] = useState(value.toString());
-  
+
   // Only update when external value actually changes
   useEffect(() => {
     if (value.toString() !== internalValue) {
       setInternalValue(value.toString());
     }
   }, [value, internalValue]);
-  
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInternalValue(newValue);
-    
+
     // Parse and validate without triggering immediate parent updates
     const num = parseFloat(newValue);
     if (!isNaN(num) && newValue.trim() !== '') {
@@ -62,7 +62,7 @@ const StableInput = memo(function StableInput({
       setTimeout(() => onChange(num), 0);
     }
   }, [onChange]);
-  
+
   return (
     <div>
       <Tooltip>
@@ -103,12 +103,12 @@ export default function SimulationControls({
   // Local state for all form values - no immediate updates
   const [localConfig, setLocalConfig] = useState(config);
   const { toast } = useToast();
-  
+
   // Update local config when parent config changes (like on simulation start)
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
-  
+
   const updateLocalConfig = useCallback((key: keyof SimulationConfig, value: any) => {
     setLocalConfig(prev => ({ ...prev, [key]: value }));
   }, []);
@@ -122,7 +122,7 @@ export default function SimulationControls({
       }
     }));
   }, []);
-  
+
   const applyChanges = useCallback(() => {
     setConfig(localConfig);
   }, [localConfig, setConfig]);
@@ -140,7 +140,7 @@ export default function SimulationControls({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Configuration Exported",
         description: "Your simulation configuration has been saved as a JSON file.",
@@ -156,7 +156,7 @@ export default function SimulationControls({
 
   // Import configuration from JSON file
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const importConfig = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -188,11 +188,11 @@ export default function SimulationControls({
     reader.onload = (e) => {
       try {
         const configData = JSON.parse(e.target?.result as string);
-        
+
         // Basic validation - check if it has expected top-level keys
         const requiredKeys = ['usersN', 'rounds', 'learnRate', 'mix', 'w', 'boosts'];
         const hasRequiredKeys = requiredKeys.every(key => key in configData);
-        
+
         if (!hasRequiredKeys) {
           toast({
             title: "Invalid Configuration",
@@ -201,10 +201,10 @@ export default function SimulationControls({
           });
           return;
         }
-        
+
         setLocalConfig(configData);
         setConfig(configData);
-        
+
         toast({
           title: "Configuration Loaded",
           description: "Your simulation configuration has been successfully imported.",
@@ -219,7 +219,7 @@ export default function SimulationControls({
       }
     };
     reader.readAsText(file);
-    
+
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -234,7 +234,11 @@ export default function SimulationControls({
         <Card className="p-6 bg-muted/50">
           <h2 className="text-lg font-semibold text-accent mb-3">📊 Social Media Simulation</h2>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-4">
-            <p>This app simulates social media behavior across different user types (Normal, Joker, Troll, Intellectual, Journalist). Each user creates posts with randomly assigned attributes like humor, insight, controversy, and bait content. Users "learn" from successful posts and adapt their future content strategy. To encourage more nuanced discussion, instead of a "Likes" system, we have a system of nuanced reactions that range from Strong Agree to Strong Disagree. The simulation also includes community-driven moderation: users can flag posts as "bait" (low-quality engagement farming), and when enough people agree, those posts get reduced reach. There's also a "vibe" system where users can tag posts as earnest discussion, which provides some protection from bait flags and shifts the content toward more thoughtful, less controversial discourse.</p>
+            <p>This app simulates social media behavior across different user types (Normal, Joker, Troll, Intellectual, Journalist). Each user creates posts with randomly assigned attributes like humor, insight, controversy, and bait content. Users "learn" from successful posts and adapt their future content strategy.</p>
+
+            <p>To encourage more nuanced discussion, instead of a "Likes" system, we have a system of nuanced reactions that range from Strong Agree to Strong Disagree.</p>
+
+            <p>The simulation also includes community-driven moderation: users can flag posts as "bait" (low-quality engagement farming), and when enough people agree, those posts get reduced reach. There's also a "vibe" system where users can tag posts as earnest discussion, which provides some protection from bait flags and shifts the content toward more thoughtful, less controversial discourse.</p>
           </div>
         </Card>
 
@@ -254,7 +258,7 @@ export default function SimulationControls({
               Update Variables
             </Button>
           </div>
-        
+
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <StableInput
@@ -422,7 +426,7 @@ export default function SimulationControls({
               step={0.05}
             />
           </div>
-          
+
           <div className="grid grid-cols-1 gap-4">
             <StableInput
               label="Base Vibe Probability 🎯"
@@ -736,7 +740,7 @@ export default function SimulationControls({
           >
             {isRunning ? '⏳ Running...' : '▶ Run Simulation'}
           </Button>
-          
+
           <Button
             data-testid="button-extend-simulation"
             onClick={onExtendSimulation}
@@ -745,7 +749,7 @@ export default function SimulationControls({
           >
             ➕ Run 10 More Rounds
           </Button>
-          
+
           <Button
             data-testid="button-export-csv"
             onClick={onExportCsv}
@@ -765,7 +769,7 @@ export default function SimulationControls({
           >
             📤 Export Config
           </Button>
-          
+
           <Button
             data-testid="button-import-config"
             onClick={importConfig}
@@ -773,7 +777,7 @@ export default function SimulationControls({
           >
             📥 Import Config
           </Button>
-          
+
           <input
             ref={fileInputRef}
             type="file"
