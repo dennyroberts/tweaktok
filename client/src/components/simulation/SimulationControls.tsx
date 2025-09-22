@@ -230,6 +230,14 @@ export default function SimulationControls({
   return (
     <TooltipProvider>
       <div className="space-y-6">
+        {/* App Explanation */}
+        <Card className="p-6 bg-muted/50">
+          <h2 className="text-lg font-semibold text-accent mb-3">📊 Social Media Simulation</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            This app simulates social media behavior across different user types (Normal, Joker, Troll, Intellectual, Journalist). Each user creates posts with randomly assigned attributes like humor, insight, controversy, and bait content. Users "learn" from successful posts and adapt their future content strategy. The simulation includes community-driven moderation: users can flag posts as "bait" (low-quality engagement farming), and when enough people agree, those posts get reduced reach. There's also a "vibe" system where users can tag posts as earnest discussion, which provides some protection from bait flags and shifts the content toward more thoughtful, less controversial discourse.
+          </p>
+        </Card>
+
         {/* Main Simulation Controls */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -355,7 +363,10 @@ export default function SimulationControls({
       {/* Vibe Effects */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-accent">🏷️ Vibe Effects</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🏷️ Vibe Effects</h3>
+            <p className="text-xs text-muted-foreground mt-1">How "vibe" tags affect post content and engagement when users mark posts as earnest discussion.</p>
+          </div>
           <Button 
             onClick={applyChanges} 
             variant="outline" 
@@ -369,7 +380,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Vibe Humor Penalty 🤐"
-              tooltip="When Vibe is on: humor *= (1 − x). 0.15 reduces humor by 15% to steer earnest tone. Higher values = less humor in vibe posts (more serious). Lower values = humor mostly preserved (more playful)."
+              tooltip="When someone tags their post as earnest discussion (vibe), it naturally becomes less funny—you can't be both completely earnest and cracking jokes at the same time. This setting controls how much the humor gets toned down. Higher values = earnest posts become much more serious. Lower values = earnest posts can still be somewhat playful."
               id="vibeHumorPenalty"
               value={localConfig.vibeHumorPenalty}
               onChange={(value) => updateLocalConfig('vibeHumorPenalty', value)}
@@ -379,7 +390,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Vibe Controversy Penalty 🧊"
-              tooltip="When Vibe is on: controversy *= (1 − x). 0.25 trims spiciness by 25%. Higher values = less controversial content in vibe posts (more civil). Lower values = controversy mostly preserved (more spicy)."
+              tooltip="When someone tags their post as earnest discussion (vibe), it naturally becomes less of a hot take or provocative statement—earnest posts tend to be more measured and thoughtful rather than inflammatory. This controls how much the spiciness gets reduced. Higher values = earnest posts become much more civil and measured. Lower values = earnest posts can still be somewhat provocative."
               id="vibeControversyPenalty"
               value={localConfig.vibeControversyPenalty}
               onChange={(value) => updateLocalConfig('vibeControversyPenalty', value)}
@@ -392,7 +403,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Vibe Insight Boost 🧠✨"
-              tooltip="When Vibe is on: insight *= (1 + x). 0.20 = +20%. Higher values = much more insightful content in vibe posts. Lower values = smaller insight boost (closer to normal)."
+              tooltip="When someone takes the time to tag their post as earnest discussion (vibe), they're usually putting more thought into it and sharing deeper insights rather than just posting off-the-cuff reactions. This setting boosts how insightful those tagged posts become. Higher values = earnest posts become much more thoughtful and analytical. Lower values = earnest posts get only a small insight boost."
               id="vibeInsightBoost"
               value={localConfig.vibeInsightBoost}
               onChange={(value) => updateLocalConfig('vibeInsightBoost', value)}
@@ -402,7 +413,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Vibe Comment Boost 💬⬆️"
-              tooltip="When Vibe is on: commentProb *= (1 + x). 0.20 adds 20% more comments. Higher values = much more likely to generate comments in vibe posts. Lower values = smaller comment boost (closer to normal)."
+              tooltip="Posts tagged as earnest discussion (vibe) tend to invite more thoughtful responses and genuine conversation rather than just quick reactions. People are more likely to take time to engage meaningfully with content that's marked as serious discussion. Higher values = earnest posts generate much more discussion. Lower values = earnest posts get only slightly more comments."
               id="vibeCommentBoost"
               value={localConfig.vibeCommentBoost}
               onChange={(value) => updateLocalConfig('vibeCommentBoost', value)}
@@ -430,7 +441,10 @@ export default function SimulationControls({
       {/* Network & Homophily */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-accent">🌐 Network & Homophily</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🌐 Network & Homophily</h3>
+            <p className="text-xs text-muted-foreground mt-1">Controls follower counts, how followers affect reach, and whether users see diverse content or stay in echo chambers.</p>
+          </div>
           <Button 
             onClick={applyChanges} 
             variant="outline" 
@@ -444,7 +458,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Initial Followers Mean 👣"
-              tooltip="Initial mean followers drawn from a noisy normal distribution. Higher values = users start with more followers (bigger initial audiences). Lower values = users start with smaller follower bases (must build audiences)."
+              tooltip="In real social media, some people start with established audiences while others begin from zero. This sets the average starting follower count across all users. Think of it like whether you're simulating a platform of mostly new users or one where people already have some following. Higher values = users start more established. Lower values = users start as unknowns."
               id="followersMean"
               value={localConfig.followersMean}
               onChange={(value) => updateLocalConfig('followersMean', Math.round(value))}
@@ -454,7 +468,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Follower→Reach Factor 📈"
-              tooltip="Diminishing returns: reach *= (1 + factor·log10(1+followers)). 0.10–0.25 typical. Higher values = followers have stronger impact on post reach. Lower values = followers have weaker impact on reach (more democratic exposure)."
+              tooltip="In real social media, having more followers helps your posts reach more people, but with diminishing returns—going from 10 to 100 followers matters more than going from 10,000 to 10,100. This controls how much your follower count affects how many people see each post. Higher values = big accounts dominate (like Twitter/X). Lower values = more democratic platform where good content can go viral regardless of follower count."
               id="followerReachFactor"
               value={localConfig.followerReachFactor}
               onChange={(value) => updateLocalConfig('followerReachFactor', value)}
@@ -466,7 +480,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Global Audience K 🌍"
-              tooltip="Larger K ⇒ more local (follower) views before global spillover. Higher values = posts stay within follower circles longer before going global. Lower values = posts reach global audience sooner (less follower-focused)."
+              tooltip="This simulates how social media algorithms balance showing posts to your existing followers versus pushing them to a broader audience. Think of it like the difference between a post that spreads within your friend group first vs. one that immediately gets shown to strangers. Higher values = posts stay within follower bubbles longer (more personal/local). Lower values = posts break out to global audiences faster."
               id="globalAudienceK"
               value={localConfig.globalAudienceK}
               onChange={(value) => updateLocalConfig('globalAudienceK', Math.round(value))}
@@ -476,7 +490,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Homophily Strength 🫧"
-              tooltip="How much users mainly see content from people who think like them. 0 = see diverse opinions, 1 = strong echo chamber where you mostly see agreement. Higher values = stronger echo chambers (less diversity). Lower values = more diverse content feeds."
+              tooltip="This is the classic 'filter bubble' or 'echo chamber' effect. When you react positively to certain types of content, do you get shown more of the same (creating a bubble) or does the algorithm keep showing you diverse viewpoints? Real platforms vary widely on this. Higher values = strong filter bubbles where users mostly see content they already agree with. Lower values = diverse feeds that challenge users with different perspectives."
               id="homophilyStrength"
               value={localConfig.homophilyStrength}
               onChange={(value) => updateLocalConfig('homophilyStrength', value)}
@@ -491,7 +505,10 @@ export default function SimulationControls({
       {/* Reaction Weights */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-accent">🎯 Reaction Weights (base blend)</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🎯 Reaction Weights (base blend)</h3>
+            <p className="text-xs text-muted-foreground mt-1">How rewarding different reaction types feel to users—positive values make users seek that reaction type, negative values make them avoid it.</p>
+          </div>
           <Button 
             onClick={applyChanges} 
             variant="outline" 
@@ -505,7 +522,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Strong Agree 💚"
-              tooltip="How rewarding it feels to get 'Strong Agree' reactions. Positive values = users want more strong agreement on their posts. Negative values = users avoid posts that get strong agreement."
+              tooltip="Think of this as how good it feels when people really love your post and strongly agree with you. In real life, some people chase validation and want lots of strong agreement, while others might find it boring or even suspicious when everyone agrees too strongly. Positive values = users love getting strong agreement and will post more content like that. Negative values = users get uncomfortable with too much agreement and will avoid posting things that get universal praise."
               id="wSA"
               value={localConfig.w.strong_agree}
               onChange={(value) => updateLocalNestedConfig('w', 'strong_agree', value)}
@@ -515,7 +532,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Agree 👍"
-              tooltip="Base utility for Agree reactions. Positive values = users are motivated by agreement. Negative values = users avoid getting agreement. Zero = neutral (no preference)."
+              tooltip="This is the basic 'thumbs up' or like reaction—moderate positive feedback. Most people find agreement somewhat rewarding, but you could model contrarians who actually dislike when people agree with them. Positive values = users enjoy getting agreement and will post more content that gets likes. Negative values = users are turned off by agreement (maybe they prefer to be controversial). Zero = users don't care much about basic agreement."
               id="wA"
               value={localConfig.w.agree}
               onChange={(value) => updateLocalNestedConfig('w', 'agree', value)}
@@ -528,7 +545,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Not Sure 🤔"
-              tooltip="Base utility for Not Sure reactions (can be positive if you want to reward nuance). Positive values = users seek nuanced, uncertain responses. Negative values = users avoid ambiguous posts. Zero = neutral."
+              tooltip="This represents when people respond with uncertainty, confusion, or 'I'm not sure' to your post. Some content creators value making people think deeply (even if they're unsure), while others want clear, decisive reactions. Positive values = users enjoy posting thought-provoking content that makes people uncertain or reflective. Negative values = users prefer posts that get clear, definitive reactions rather than confusion. Zero = users don't care about uncertain responses."
               id="wNS"
               value={localConfig.w.not_sure}
               onChange={(value) => updateLocalNestedConfig('w', 'not_sure', value)}
@@ -538,7 +555,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Disagree 👎"
-              tooltip="Base utility for Disagree reactions. Positive values = users seek disagreement (contrarian behavior). Negative values = users avoid posts that get disagreement. Zero = neutral."
+              tooltip="The basic 'thumbs down' or disagree reaction. Most people don't like being disagreed with, but some personalities (like trolls or devils advocates) actually enjoy stirring up disagreement and debate. Positive values = users enjoy getting disagreement and will post more controversial content. Negative values = users dislike disagreement and will avoid posting things that get negative reactions. Zero = users are neutral about disagreement."
               id="wD"
               value={localConfig.w.disagree}
               onChange={(value) => updateLocalNestedConfig('w', 'disagree', value)}
@@ -551,7 +568,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-1 gap-4">
             <StableInput
               label="Strong Disagree 💔"
-              tooltip="Base utility for Strong Disagree reactions. Negative values = users avoid posts that get strong disagreement (normal behavior). Positive values = users seek controversy and strong pushback."
+              tooltip="This is when people really hate your post and strongly disagree with you. Most normal users want to avoid this kind of intense negative reaction, but trolls and controversy-seekers might actually be motivated by it. Negative values = users hate getting strong disagreement and will avoid posting content that gets them (normal behavior). Positive values = users are energized by strong negative reactions and will post more inflammatory content to get them (troll behavior)."
               id="wSD"
               value={localConfig.w.strong_disagree}
               onChange={(value) => updateLocalNestedConfig('w', 'strong_disagree', value)}
@@ -566,7 +583,10 @@ export default function SimulationControls({
       {/* User Type Mix */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-accent">🧬 User Type Mix (%)</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🧬 User Type Mix (%)</h3>
+            <p className="text-xs text-muted-foreground mt-1">What percentage of users are each archetype—Normal (balanced), Joker (humor-focused), Troll (controversy-seeking), Intellectual (insight-driven), Journalist (news-oriented).</p>
+          </div>
           <Button 
             onClick={applyChanges} 
             variant="outline" 
@@ -642,7 +662,10 @@ export default function SimulationControls({
       {/* Post Attribute Boosts */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-accent">🧪 Post Attribute Boosts (−1 to +1)</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🧪 Post Attribute Boosts (−1 to +1)</h3>
+            <p className="text-xs text-muted-foreground mt-1">Platform-wide modifiers that reward or punish specific types of content—positive values boost engagement for that content type.</p>
+          </div>
           <Button 
             onClick={applyChanges} 
             variant="outline" 
@@ -656,7 +679,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Boost Humor 😹"
-              tooltip="Multiply humor by (1 + x). −1..+1. Positive values = funnier posts get more engagement. Negative values = funny posts get less engagement (de-boost humor). Zero = no effect."
+              tooltip="This controls whether the platform's algorithm favors or punishes funny content. Think of it like platform policy—some platforms want to encourage humor and memes (like TikTok), while others might want to discourage joke posts in favor of serious content. Positive values = the platform rewards humor with more reach (comedy-friendly platform). Negative values = the platform suppresses humor (serious discussion platform). Zero = platform is neutral on humor."
               id="boostHumor"
               value={localConfig.boosts.humor}
               onChange={(value) => updateLocalNestedConfig('boosts', 'humor', value)}
@@ -666,7 +689,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Boost Insight 🧠"
-              tooltip="Multiply insight by (1 + x). Positive values = insightful posts get more engagement. Negative values = insightful posts get less engagement (de-boost insights). Zero = no effect."
+              tooltip="This controls whether the platform's algorithm favors or punishes thoughtful, analytical content. Different platforms have different goals—some want to promote deep thinking and learning, while others might prioritize simpler, more viral content. Positive values = the platform rewards insightful content with more reach (educational platform). Negative values = the platform suppresses analytical content (entertainment-focused platform). Zero = platform is neutral on insight."
               id="boostInsight"
               value={localConfig.boosts.insight}
               onChange={(value) => updateLocalNestedConfig('boosts', 'insight', value)}
@@ -679,7 +702,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Boost Bait 🪤"
-              tooltip="Multiply bait by (1 + x). Positive values = bait posts get more engagement (reward clickbait). Negative values = bait posts get less engagement (punish clickbait). Zero = no effect."
+              tooltip="This controls whether the platform's algorithm favors or punishes clickbait and low-quality engagement farming. Think of the difference between platforms that thrive on outrage and attention-grabbing content versus those that try to promote quality discourse. Positive values = the platform rewards clickbait with more reach (engagement-at-all-costs platform). Negative values = the platform suppresses low-quality bait content (quality-focused platform). Zero = platform is neutral on bait."
               id="boostBait"
               value={localConfig.boosts.bait}
               onChange={(value) => updateLocalNestedConfig('boosts', 'bait', value)}
@@ -689,7 +712,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Boost Controversy 🌶️"
-              tooltip="Multiply controversy by (1 + x). Positive values = controversial posts get more engagement (reward controversy). Negative values = controversial posts get less engagement (discourage controversy). Zero = no effect."
+              tooltip="This controls whether the platform's algorithm favors or punishes controversial, divisive content. Some platforms thrive on heated debates and arguments because they drive engagement, while others try to promote civil discourse and reduce conflict. Positive values = the platform rewards controversial content with more reach (drama-driven platform). Negative values = the platform suppresses divisive content (harmony-focused platform). Zero = platform is neutral on controversy."
               id="boostControversy"
               value={localConfig.boosts.controversy}
               onChange={(value) => updateLocalNestedConfig('boosts', 'controversy', value)}
