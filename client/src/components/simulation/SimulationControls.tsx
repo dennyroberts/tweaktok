@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimulationConfig } from "@/lib/simulation";
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useEffect } from "react";
 
 interface SimulationControlsProps {
   config: SimulationConfig;
@@ -16,7 +16,7 @@ interface SimulationControlsProps {
   canExtend: boolean;
 }
 
-// Move TooltipInput outside the main component to prevent recreation on re-renders
+// Simple TooltipInput without complex state management
 const TooltipInput = memo(({ 
   label, 
   tooltip, 
@@ -38,37 +38,13 @@ const TooltipInput = memo(({
   step?: number;
   type?: string;
 }) => {
-  const [localValue, setLocalValue] = useState(value.toString());
-  
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setLocalValue(val);
-    
-    // Only update parent state if we have a valid number
     const num = parseFloat(val);
-    if (!isNaN(num) && val !== '' && val !== '-' && val !== '.') {
+    if (!isNaN(num)) {
       onChange(num);
     }
   }, [onChange]);
-  
-  const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    const num = parseFloat(val);
-    
-    if (isNaN(num) || val === '' || val === '-' || val === '.') {
-      // Reset to parent value if invalid
-      setLocalValue(value.toString());
-    } else {
-      // Ensure parent state is updated and format the display
-      onChange(num);
-      setLocalValue(num.toString());
-    }
-  }, [onChange, value]);
-  
-  // Update local value when parent value changes
-  const handleFocus = useCallback(() => {
-    setLocalValue(value.toString());
-  }, [value]);
   
   return (
     <div>
@@ -79,16 +55,15 @@ const TooltipInput = memo(({
         {tooltip}
       </div>
       <Input
+        key={id}
         id={id}
         data-testid={`input-${id}`}
         type={type}
         min={min}
         max={max}
         step={step}
-        value={localValue}
+        value={value}
         onChange={handleChange}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
         className="w-full bg-input border-border text-foreground"
       />
     </div>
@@ -104,6 +79,10 @@ export default function SimulationControls({
   isRunning,
   canExtend
 }: SimulationControlsProps) {
+  // Debug: Log re-renders
+  useEffect(() => {
+    console.log('SimulationControls re-rendered');
+  });
   // Use functional updates to prevent unnecessary re-renders
   const updateConfig = useCallback((key: keyof SimulationConfig, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
