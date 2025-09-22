@@ -244,23 +244,8 @@ export class ChartManager {
   }
 
   updateFollowersChart(state: SimulationState): void {
-    const colors = this.getChartColors();
-    const labels = Array.from({ length: state.seriesFollowersAll.length }, (_, i) => i + 1);
-    const ma = this.movingAvg(state.seriesFollowersAll, 10);
-
-    this.initializeChart('chartFollowersAll', 'line', {
-      labels,
-      datasets: [
-        {
-          label: 'Total Followers (MA-10)',
-          data: ma,
-          borderColor: colors.primary,
-          backgroundColor: colors.primary + '20',
-          borderWidth: 3,
-          fill: true
-        }
-      ]
-    });
+    // Skip creating the total followers chart - just update individual type charts
+    this.updateFollowersByTypeCharts(state);
   }
 
   updateFollowersByTypeCharts(state: SimulationState): void {
@@ -458,7 +443,6 @@ export class ChartManager {
     this.updateBaitChart(state);
     this.updateAgreeChart(state);
     this.updateFollowersChart(state);
-    this.updateFollowersByTypeCharts(state);
     this.updateAttributesChart(state);
     this.updateVibeCharts(state);
   }

@@ -196,22 +196,28 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
       <Card className="p-6">
         <div className="space-y-6">
           <div>
-            <h3 className="text-sm font-medium text-accent mb-3">👣 Followers Over Time (All Types)</h3>
-            <canvas 
-              id="chartFollowersAll" 
-              className="w-full h-50"
-              data-testid="chart-followers-all"
-            ></canvas>
-          </div>
-
-          <div>
             <h3 className="text-sm font-medium text-accent mb-3">👣 Followers Over Time (By Type)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <canvas id="chartF_N" className="w-full h-35" data-testid="chart-followers-normal"></canvas>
-              <canvas id="chartF_J" className="w-full h-35" data-testid="chart-followers-joker"></canvas>
-              <canvas id="chartF_T" className="w-full h-35" data-testid="chart-followers-troll"></canvas>
-              <canvas id="chartF_I" className="w-full h-35" data-testid="chart-followers-intellectual"></canvas>
-              <canvas id="chartF_JO" className="w-full h-35" data-testid="chart-followers-journalist"></canvas>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">Normal Users</h4>
+                <canvas id="chartF_N" className="w-full h-48" data-testid="chart-followers-normal"></canvas>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">Joker Users</h4>
+                <canvas id="chartF_J" className="w-full h-48" data-testid="chart-followers-joker"></canvas>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">Troll Users</h4>
+                <canvas id="chartF_T" className="w-full h-48" data-testid="chart-followers-troll"></canvas>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">Intellectual Users</h4>
+                <canvas id="chartF_I" className="w-full h-48" data-testid="chart-followers-intellectual"></canvas>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground mb-2">Journalist Users</h4>
+                <canvas id="chartF_JO" className="w-full h-48" data-testid="chart-followers-journalist"></canvas>
+              </div>
             </div>
           </div>
         </div>
