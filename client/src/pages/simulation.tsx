@@ -112,7 +112,7 @@ export default function Simulation() {
           <div className="flex items-center gap-3">
             <div className="text-2xl">🧪</div>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">Nuanced Discourse Simulator — v5</h1>
+              <h1 className="text-lg font-semibold text-foreground">Social Platform Sandbox — v5</h1>
               <p className="text-sm text-muted-foreground">Network & homophily • vibe dynamics • type utilities • bait ratio penalty</p>
             </div>
           </div>
@@ -123,7 +123,6 @@ export default function Simulation() {
           </div>
         </div>
       </header>
-
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-[480px_1fr] gap-6 p-6 max-w-[1800px] mx-auto">
         <SimulationControls
@@ -141,7 +140,6 @@ export default function Simulation() {
           isRunning={isRunning}
         />
       </div>
-
       {/* Footer */}
       <footer className="border-t border-border mt-12">
         <div className="px-6 py-4 text-center">

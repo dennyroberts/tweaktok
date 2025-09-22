@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimulationConfig } from "@/lib/simulation";
-import { useState, useCallback, memo, useEffect } from "react";
+import { useState, useCallback, memo, useEffect, useRef } from "react";
 
 interface SimulationControlsProps {
   config: SimulationConfig;
@@ -16,8 +16,8 @@ interface SimulationControlsProps {
   canExtend: boolean;
 }
 
-// Input component that only updates local state (no parent updates)
-const TooltipInput = memo(({ 
+// Stable input component - defined once, never recreated
+const StableInput = memo(function StableInput({ 
   label, 
   tooltip, 
   id, 
@@ -37,21 +37,27 @@ const TooltipInput = memo(({
   max: number;
   step?: number;
   type?: string;
-}) => {
-  const [localValue, setLocalValue] = useState(value.toString());
+}) {
+  // Use a stable ref to maintain the same input element
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [internalValue, setInternalValue] = useState(value.toString());
   
-  // Update local value when parent value changes
+  // Only update when external value actually changes
   useEffect(() => {
-    setLocalValue(value.toString());
-  }, [value]);
+    if (value.toString() !== internalValue) {
+      setInternalValue(value.toString());
+    }
+  }, [value, internalValue]);
   
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setLocalValue(val);
-    // Only update parent on valid numbers, but don't cause re-renders
-    const num = parseFloat(val);
-    if (!isNaN(num) && val !== '' && val !== '-' && val !== '.') {
-      onChange(num);
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    
+    // Parse and validate without triggering immediate parent updates
+    const num = parseFloat(newValue);
+    if (!isNaN(num) && newValue.trim() !== '') {
+      // Use setTimeout to batch the update and prevent immediate re-renders
+      setTimeout(() => onChange(num), 0);
     }
   }, [onChange]);
   
@@ -64,13 +70,14 @@ const TooltipInput = memo(({
         {tooltip}
       </div>
       <Input
+        ref={inputRef}
         id={id}
         data-testid={`input-${id}`}
         type={type}
         min={min}
         max={max}
         step={step}
-        value={localValue}
+        value={internalValue}
         onChange={handleChange}
         className="w-full bg-input border-border text-foreground"
       />
@@ -202,7 +209,7 @@ export default function SimulationControls({
         
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Users 👥"
               tooltip="Number of agents (users). Larger N smooths averages but is slower."
               id="users"
@@ -212,7 +219,7 @@ export default function SimulationControls({
               max={5000}
               step={1}
             />
-            <TooltipInput
+            <StableInput
               label="Rounds (initial) 🔁"
               tooltip="How many posting rounds to simulate on Run. Use ➕ to extend later."
               id="rounds"
@@ -225,7 +232,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Learning Rate 🧠"
               tooltip="Learning rate in the strategy update: s ← s + lr * adj * (post − s). Higher = faster adaptation/overfitting. Typical 0.05–0.3."
               id="learnRate"
@@ -234,7 +241,7 @@ export default function SimulationControls({
               min={0}
               max={1}
             />
-            <TooltipInput
+            <StableInput
               label="Bait Ratio Threshold 🚩"
               tooltip="If bait_flags / interactions ≥ threshold, we scale down engagement probs by the Bait Penalty Multiplier. Typical 0.08–0.2."
               id="baitRatioThresh"
@@ -246,7 +253,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <TooltipInput
+            <StableInput
               label="Bait Penalty Multiplier 🧯"
               tooltip="Multiplier applied to reaction/comment probs AFTER crossing the bait threshold. 1.0 = no penalty, 0.0 = full shutdown (harsh). 0.2–0.6 is common."
               id="baitPenaltyMult"
@@ -259,7 +266,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Base Reach Min 📡"
               tooltip="Base exposure budget per post before attribute/follower effects."
               id="reachMin"
@@ -269,7 +276,7 @@ export default function SimulationControls({
               max={10000}
               step={1}
             />
-            <TooltipInput
+            <StableInput
               label="Base Reach Max 📡"
               tooltip="Upper bound for base exposure before effects."
               id="reachMax"
@@ -282,7 +289,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Vibe Flag Multiplier 🏷️"
               tooltip="If Vibe tag is on, we multiply bait flag probability by this (lower is more protective). 0.5–0.8 typical."
               id="vibeFlagMult"
@@ -292,7 +299,7 @@ export default function SimulationControls({
               max={1}
               step={0.05}
             />
-            <TooltipInput
+            <StableInput
               label="Polarization Coupling ⚖️"
               tooltip="Couples extremes: more SA makes SD more likely and vice versa. 0 = off, 0.1–0.2 = moderate, 0.4+ = intense polarization."
               id="polarCoupling"
@@ -310,7 +317,7 @@ export default function SimulationControls({
         <h3 className="text-sm font-semibold text-accent mb-4">🏷️ Vibe Effects</h3>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Vibe Humor Penalty 🤐"
               tooltip="When Vibe is on: humor *= (1 − x). 0.15 reduces humor by 15% to steer earnest tone."
               id="vibeHumorPenalty"
@@ -320,7 +327,7 @@ export default function SimulationControls({
               max={0.9}
               step={0.05}
             />
-            <TooltipInput
+            <StableInput
               label="Vibe Controversy Penalty 🧊"
               tooltip="When Vibe is on: controversy *= (1 − x). 0.25 trims spiciness by 25%."
               id="vibeControversyPenalty"
@@ -333,7 +340,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Vibe Insight Boost 🧠✨"
               tooltip="When Vibe is on: insight *= (1 + x). 0.20 = +20%."
               id="vibeInsightBoost"
@@ -343,7 +350,7 @@ export default function SimulationControls({
               max={1}
               step={0.05}
             />
-            <TooltipInput
+            <StableInput
               label="Vibe Comment Boost 💬⬆️"
               tooltip="When Vibe is on: commentProb *= (1 + x). 0.20 adds 20% more comments."
               id="vibeCommentBoost"
@@ -356,7 +363,7 @@ export default function SimulationControls({
           </div>
           
           <div className="grid grid-cols-1 gap-4">
-            <TooltipInput
+            <StableInput
               label="Base Vibe Probability 🎯"
               tooltip="Starting probability for Normal users to use vibe tags. They'll learn from here. 0.05 = 5% chance initially."
               id="baseVibeProb"
@@ -375,7 +382,7 @@ export default function SimulationControls({
         <h3 className="text-sm font-semibold text-accent mb-4">🌐 Network & Homophily</h3>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Initial Followers Mean 👣"
               tooltip="Initial mean followers drawn from a noisy normal distribution."
               id="followersMean"
@@ -385,7 +392,7 @@ export default function SimulationControls({
               max={100000}
               step={10}
             />
-            <TooltipInput
+            <StableInput
               label="Follower→Reach Factor 📈"
               tooltip="Diminishing returns: reach *= (1 + factor·log10(1+followers)). 0.10–0.25 typical."
               id="followerReachFactor"
@@ -397,7 +404,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Global Audience K 🌍"
               tooltip="Larger K ⇒ more local (follower) views before global spillover."
               id="globalAudienceK"
@@ -407,7 +414,7 @@ export default function SimulationControls({
               max={100000}
               step={10}
             />
-            <TooltipInput
+            <StableInput
               label="Homophily Strength 🫧"
               tooltip="Tilt local audience toward agreement. 0=no bubble; 1=strong bubble."
               id="homophilyStrength"
@@ -426,7 +433,7 @@ export default function SimulationControls({
         <h3 className="text-sm font-semibold text-accent mb-4">🎯 Reaction Weights (base blend)</h3>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Strong Agree 💚"
               tooltip="Base utility weight for Strong Agree in reward. Type-specific utilities are blended 50/50 with these."
               id="wSA"
@@ -436,7 +443,7 @@ export default function SimulationControls({
               max={3}
               step={0.1}
             />
-            <TooltipInput
+            <StableInput
               label="Agree 👍"
               tooltip="Base utility for Agree."
               id="wA"
@@ -449,7 +456,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Not Sure 🤔"
               tooltip="Base utility for Not Sure (can be positive if you want to reward nuance)."
               id="wNS"
@@ -459,7 +466,7 @@ export default function SimulationControls({
               max={3}
               step={0.1}
             />
-            <TooltipInput
+            <StableInput
               label="Disagree 👎"
               tooltip="Base utility for Disagree."
               id="wD"
@@ -472,7 +479,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <TooltipInput
+            <StableInput
               label="Strong Disagree 💔"
               tooltip="Base utility for Strong Disagree. Negative usually."
               id="wSD"
@@ -491,7 +498,7 @@ export default function SimulationControls({
         <h3 className="text-sm font-semibold text-accent mb-4">🧬 User Type Mix (%)</h3>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Normal 🙂"
               tooltip="Baseline balanced actors."
               id="pctNormal"
@@ -501,7 +508,7 @@ export default function SimulationControls({
               max={100}
               step={1}
             />
-            <TooltipInput
+            <StableInput
               label="Joker 😆"
               tooltip="Comedy & dunks."
               id="pctJoker"
@@ -514,7 +521,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Troll 😈"
               tooltip="Spicy & bait-prone."
               id="pctTroll"
@@ -524,7 +531,7 @@ export default function SimulationControls({
               max={100}
               step={1}
             />
-            <TooltipInput
+            <StableInput
               label="Intellectual 🧐"
               tooltip="Insight & news oriented."
               id="pctIntel"
@@ -537,7 +544,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            <TooltipInput
+            <StableInput
               label="Journalist 📝"
               tooltip="High news propensity, high vibe usage."
               id="pctJourno"
@@ -557,7 +564,7 @@ export default function SimulationControls({
         <h3 className="text-sm font-semibold text-accent mb-4">🧪 Post Attribute Boosts (−1 to +1)</h3>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Boost Humor 😹"
               tooltip="Multiply humor by (1 + x). −1..+1. Set negative to de-boost."
               id="boostHumor"
@@ -567,7 +574,7 @@ export default function SimulationControls({
               max={1}
               step={0.05}
             />
-            <TooltipInput
+            <StableInput
               label="Boost Insight 🧠"
               tooltip="Multiply insight by (1 + x)."
               id="boostInsight"
@@ -580,7 +587,7 @@ export default function SimulationControls({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <TooltipInput
+            <StableInput
               label="Boost Bait 🪤"
               tooltip="Multiply bait by (1 + x). Use negative to de-boost bait."
               id="boostBait"
@@ -590,7 +597,7 @@ export default function SimulationControls({
               max={1}
               step={0.05}
             />
-            <TooltipInput
+            <StableInput
               label="Boost Controversy 🌶️"
               tooltip="Multiply controversy by (1 + x)."
               id="boostControversy"
