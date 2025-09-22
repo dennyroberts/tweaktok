@@ -239,6 +239,8 @@ export default function SimulationControls({
             <p>To encourage more nuanced discussion, instead of a "Likes" system, we have a system of nuanced reactions that range from Strong Agree to Strong Disagree.</p>
 
             <p>The simulation also includes community-driven moderation: users can flag posts as "bait" (low-quality engagement farming), and when enough people agree, those posts get reduced reach. There's also a "vibe" system where users can tag posts as earnest discussion, which provides some protection from bait flags and shifts the content toward more thoughtful, less controversial discourse.</p>
+
+            <p className="font-semibold text-foreground">*REMEMBER TO HIT 'UPDATE VARIABLES' WHEN YOU CHANGE A SECTION BEFORE RUNNING THE SIM*</p>
           </div>
         </Card>
 
