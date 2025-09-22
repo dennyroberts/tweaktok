@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SimulationConfig } from "@/lib/simulation";
 import { useState, useCallback, memo, useEffect, useRef } from "react";
 
@@ -63,12 +64,16 @@ const StableInput = memo(function StableInput({
   
   return (
     <div>
-      <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-1">
-        {label}
-      </Label>
-      <div className="text-xs text-muted-foreground mb-2 leading-relaxed">
-        {tooltip}
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-2 cursor-help">
+            {label} ℹ️
+          </Label>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">
+          <p>{tooltip}</p>
+        </TooltipContent>
+      </Tooltip>
       <Input
         ref={inputRef}
         id={id}
@@ -120,92 +125,26 @@ export default function SimulationControls({
     setConfig(localConfig);
   }, [localConfig, setConfig]);
 
-  const TooltipInput = ({ 
-    label, 
-    tooltip, 
-    id, 
-    value, 
-    onChange, 
-    min, 
-    max, 
-    step = 0.01,
-    type = "number"
-  }: {
-    label: string;
-    tooltip: string;
-    id: string;
-    value: number;
-    onChange: (value: number) => void;
-    min: number;
-    max: number;
-    step?: number;
-    type?: string;
-  }) => {
-    const [localValue, setLocalValue] = useState(value.toString());
-    
-    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = e.target.value;
-      setLocalValue(val);
-      
-      // Only update parent state if we have a valid number
-      const num = parseFloat(val);
-      if (!isNaN(num) && val !== '' && val !== '-' && val !== '.') {
-        onChange(num);
-      }
-    }, [onChange]);
-    
-    const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-      const val = e.target.value;
-      const num = parseFloat(val);
-      
-      if (isNaN(num) || val === '' || val === '-' || val === '.') {
-        // Reset to parent value if invalid
-        setLocalValue(value.toString());
-      } else {
-        // Ensure parent state is updated and format the display
-        onChange(num);
-        setLocalValue(num.toString());
-      }
-    }, [onChange, value]);
-    
-    // Update local value when parent value changes
-    const handleFocus = useCallback(() => {
-      setLocalValue(value.toString());
-    }, [value]);
-    
-    return (
-      <div>
-        <Label htmlFor={id} className="block text-sm font-medium text-muted-foreground mb-1">
-          {label}
-        </Label>
-        <div className="text-xs text-muted-foreground mb-2 leading-relaxed">
-          {tooltip}
-        </div>
-        <Input
-          id={id}
-          data-testid={`input-${id}`}
-          type={type}
-          min={min}
-          max={max}
-          step={step}
-          value={localValue}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          className="w-full bg-input border-border text-foreground"
-        />
-      </div>
-    );
-  };
 
   return (
-    <div className="space-y-6">
-      {/* Main Simulation Controls */}
-      <Card className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-base font-semibold text-accent">🛠️ Simulation Controls</h2>
-          <Badge variant="outline" className="text-xs">hover ℹ️ for math</Badge>
-        </div>
+    <TooltipProvider>
+      <div className="space-y-6">
+        {/* Main Simulation Controls */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold text-accent">🛠️ Simulation Controls</h2>
+              <Badge variant="outline" className="text-xs">hover ℹ️ for details</Badge>
+            </div>
+            <Button 
+              onClick={applyChanges} 
+              variant="outline" 
+              size="sm"
+              data-testid="button-update-main"
+            >
+              Update Variables
+            </Button>
+          </div>
         
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -234,7 +173,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Learning Rate 🧠"
-              tooltip="Learning rate in the strategy update: s ← s + lr * adj * (post − s). Higher = faster adaptation/overfitting. Typical 0.05–0.3."
+              tooltip="How quickly users adapt their posting strategy based on feedback. Higher values = users change their behavior faster based on what gets engagement. Lower values = more stable, slower learning."
               id="learnRate"
               value={localConfig.learnRate}
               onChange={(value) => updateLocalConfig('learnRate', value)}
@@ -243,7 +182,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Bait Ratio Threshold 🚩"
-              tooltip="If bait_flags / interactions ≥ threshold, we scale down engagement probs by the Bait Penalty Multiplier. Typical 0.08–0.2."
+              tooltip="Users can flag posts as 'bait' (low-quality engagement farming). If enough people agree a post is bait (ratio crosses this threshold), we reduce that post's engagement reach. Think of it as community-driven content moderation."
               id="baitRatioThresh"
               value={localConfig.baitRatioThresh}
               onChange={(value) => updateLocalConfig('baitRatioThresh', value)}
@@ -255,7 +194,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-1 gap-4">
             <StableInput
               label="Bait Penalty Multiplier 🧯"
-              tooltip="Multiplier applied to reaction/comment probs AFTER crossing the bait threshold. 1.0 = no penalty, 0.0 = full shutdown (harsh). 0.2–0.6 is common."
+              tooltip="Once a post is flagged as bait, this controls how much we reduce its engagement. 1.0 = no reduction, 0.5 = half the engagement, 0.0 = completely hidden. Lower values are harsher penalties."
               id="baitPenaltyMult"
               value={localConfig.baitPenaltyMult}
               onChange={(value) => updateLocalConfig('baitPenaltyMult', value)}
@@ -291,7 +230,7 @@ export default function SimulationControls({
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Vibe Flag Multiplier 🏷️"
-              tooltip="If Vibe tag is on, we multiply bait flag probability by this (lower is more protective). 0.5–0.8 typical."
+              tooltip="When users add 'vibe' tags to their posts, this reduces how likely others are to flag it as bait. Think of it as a 'good faith discussion' label that provides some protection from being flagged."
               id="vibeFlagMult"
               value={localConfig.vibeFlagMult}
               onChange={(value) => updateLocalConfig('vibeFlagMult', value)}
@@ -301,7 +240,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Polarization Coupling ⚖️"
-              tooltip="Couples extremes: more SA makes SD more likely and vice versa. 0 = off, 0.1–0.2 = moderate, 0.4+ = intense polarization."
+              tooltip="Controls how much extreme reactions (strong agree/disagree) encourage more extreme reactions from others. Higher values create more polarized discussions where moderate responses become less common."
               id="polarCoupling"
               value={localConfig.polarCoupling}
               onChange={(value) => updateLocalConfig('polarCoupling', value)}
@@ -314,7 +253,17 @@ export default function SimulationControls({
 
       {/* Vibe Effects */}
       <Card className="p-6">
-        <h3 className="text-sm font-semibold text-accent mb-4">🏷️ Vibe Effects</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-accent">🏷️ Vibe Effects</h3>
+          <Button 
+            onClick={applyChanges} 
+            variant="outline" 
+            size="sm"
+            data-testid="button-update-vibe"
+          >
+            Update Variables
+          </Button>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <StableInput
@@ -379,7 +328,17 @@ export default function SimulationControls({
 
       {/* Network & Homophily */}
       <Card className="p-6">
-        <h3 className="text-sm font-semibold text-accent mb-4">🌐 Network & Homophily</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-accent">🌐 Network & Homophily</h3>
+          <Button 
+            onClick={applyChanges} 
+            variant="outline" 
+            size="sm"
+            data-testid="button-update-network"
+          >
+            Update Variables
+          </Button>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <StableInput
@@ -416,7 +375,7 @@ export default function SimulationControls({
             />
             <StableInput
               label="Homophily Strength 🫧"
-              tooltip="Tilt local audience toward agreement. 0=no bubble; 1=strong bubble."
+              tooltip="How much users mainly see content from people who think like them. 0 = see diverse opinions, 1 = strong echo chamber where you mostly see agreement."
               id="homophilyStrength"
               value={localConfig.homophilyStrength}
               onChange={(value) => updateLocalConfig('homophilyStrength', value)}
@@ -430,12 +389,22 @@ export default function SimulationControls({
 
       {/* Reaction Weights */}
       <Card className="p-6">
-        <h3 className="text-sm font-semibold text-accent mb-4">🎯 Reaction Weights (base blend)</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-accent">🎯 Reaction Weights (base blend)</h3>
+          <Button 
+            onClick={applyChanges} 
+            variant="outline" 
+            size="sm"
+            data-testid="button-update-reactions"
+          >
+            Update Variables
+          </Button>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <StableInput
               label="Strong Agree 💚"
-              tooltip="Base utility weight for Strong Agree in reward. Type-specific utilities are blended 50/50 with these."
+              tooltip="How rewarding it feels to get 'Strong Agree' reactions. Positive values make users want more strong agreement on their posts."
               id="wSA"
               value={localConfig.w.strong_agree}
               onChange={(value) => updateLocalNestedConfig('w', 'strong_agree', value)}
@@ -495,7 +464,17 @@ export default function SimulationControls({
 
       {/* User Type Mix */}
       <Card className="p-6">
-        <h3 className="text-sm font-semibold text-accent mb-4">🧬 User Type Mix (%)</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-accent">🧬 User Type Mix (%)</h3>
+          <Button 
+            onClick={applyChanges} 
+            variant="outline" 
+            size="sm"
+            data-testid="button-update-usertypes"
+          >
+            Update Variables
+          </Button>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <StableInput
@@ -561,7 +540,17 @@ export default function SimulationControls({
 
       {/* Post Attribute Boosts */}
       <Card className="p-6">
-        <h3 className="text-sm font-semibold text-accent mb-4">🧪 Post Attribute Boosts (−1 to +1)</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-accent">🧪 Post Attribute Boosts (−1 to +1)</h3>
+          <Button 
+            onClick={applyChanges} 
+            variant="outline" 
+            size="sm"
+            data-testid="button-update-boosts"
+          >
+            Update Variables
+          </Button>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <StableInput
@@ -640,6 +629,7 @@ export default function SimulationControls({
           ⭳ Export CSV
         </Button>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
