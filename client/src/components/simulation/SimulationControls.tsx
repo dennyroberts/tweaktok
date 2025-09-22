@@ -16,7 +16,7 @@ interface SimulationControlsProps {
   canExtend: boolean;
 }
 
-// Simple TooltipInput without complex state management
+// Input component that only updates local state (no parent updates)
 const TooltipInput = memo(({ 
   label, 
   tooltip, 
@@ -38,10 +38,19 @@ const TooltipInput = memo(({
   step?: number;
   type?: string;
 }) => {
+  const [localValue, setLocalValue] = useState(value.toString());
+  
+  // Update local value when parent value changes
+  useEffect(() => {
+    setLocalValue(value.toString());
+  }, [value]);
+  
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
+    setLocalValue(val);
+    // Only update parent on valid numbers, but don't cause re-renders
     const num = parseFloat(val);
-    if (!isNaN(num)) {
+    if (!isNaN(num) && val !== '' && val !== '-' && val !== '.') {
       onChange(num);
     }
   }, [onChange]);
@@ -55,14 +64,13 @@ const TooltipInput = memo(({
         {tooltip}
       </div>
       <Input
-        key={id}
         id={id}
         data-testid={`input-${id}`}
         type={type}
         min={min}
         max={max}
         step={step}
-        value={value}
+        value={localValue}
         onChange={handleChange}
         className="w-full bg-input border-border text-foreground"
       />
@@ -79,24 +87,31 @@ export default function SimulationControls({
   isRunning,
   canExtend
 }: SimulationControlsProps) {
-  // Debug: Log re-renders
+  // Local state for all form values - no immediate updates
+  const [localConfig, setLocalConfig] = useState(config);
+  
+  // Update local config when parent config changes (like on simulation start)
   useEffect(() => {
-    console.log('SimulationControls re-rendered');
-  });
-  // Use functional updates to prevent unnecessary re-renders
-  const updateConfig = useCallback((key: keyof SimulationConfig, value: any) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
-  }, [setConfig]);
+    setLocalConfig(config);
+  }, [config]);
+  
+  const updateLocalConfig = useCallback((key: keyof SimulationConfig, value: any) => {
+    setLocalConfig(prev => ({ ...prev, [key]: value }));
+  }, []);
 
-  const updateNestedConfig = useCallback((parent: string, key: string, value: number) => {
-    setConfig(prev => ({
+  const updateLocalNestedConfig = useCallback((parent: string, key: string, value: number) => {
+    setLocalConfig(prev => ({
       ...prev,
       [parent]: {
         ...(prev[parent as keyof SimulationConfig] as any),
         [key]: value
       }
     }));
-  }, [setConfig]);
+  }, []);
+  
+  const applyChanges = useCallback(() => {
+    setConfig(localConfig);
+  }, [localConfig, setConfig]);
 
   const TooltipInput = ({ 
     label, 
@@ -191,8 +206,8 @@ export default function SimulationControls({
               label="Users 👥"
               tooltip="Number of agents (users). Larger N smooths averages but is slower."
               id="users"
-              value={config.usersN}
-              onChange={(value) => updateConfig('usersN', Math.round(value))}
+              value={localConfig.usersN}
+              onChange={(value) => updateLocalConfig('usersN', Math.round(value))}
               min={5}
               max={5000}
               step={1}
@@ -201,8 +216,8 @@ export default function SimulationControls({
               label="Rounds (initial) 🔁"
               tooltip="How many posting rounds to simulate on Run. Use ➕ to extend later."
               id="rounds"
-              value={config.rounds}
-              onChange={(value) => updateConfig('rounds', Math.round(value))}
+              value={localConfig.rounds}
+              onChange={(value) => updateLocalConfig('rounds', Math.round(value))}
               min={5}
               max={500}
               step={1}
@@ -214,8 +229,8 @@ export default function SimulationControls({
               label="Learning Rate 🧠"
               tooltip="Learning rate in the strategy update: s ← s + lr * adj * (post − s). Higher = faster adaptation/overfitting. Typical 0.05–0.3."
               id="learnRate"
-              value={config.learnRate}
-              onChange={(value) => updateConfig('learnRate', value)}
+              value={localConfig.learnRate}
+              onChange={(value) => updateLocalConfig('learnRate', value)}
               min={0}
               max={1}
             />
@@ -223,8 +238,8 @@ export default function SimulationControls({
               label="Bait Ratio Threshold 🚩"
               tooltip="If bait_flags / interactions ≥ threshold, we scale down engagement probs by the Bait Penalty Multiplier. Typical 0.08–0.2."
               id="baitRatioThresh"
-              value={config.baitRatioThresh}
-              onChange={(value) => updateConfig('baitRatioThresh', value)}
+              value={localConfig.baitRatioThresh}
+              onChange={(value) => updateLocalConfig('baitRatioThresh', value)}
               min={0.01}
               max={0.8}
             />
@@ -235,8 +250,8 @@ export default function SimulationControls({
               label="Bait Penalty Multiplier 🧯"
               tooltip="Multiplier applied to reaction/comment probs AFTER crossing the bait threshold. 1.0 = no penalty, 0.0 = full shutdown (harsh). 0.2–0.6 is common."
               id="baitPenaltyMult"
-              value={config.baitPenaltyMult}
-              onChange={(value) => updateConfig('baitPenaltyMult', value)}
+              value={localConfig.baitPenaltyMult}
+              onChange={(value) => updateLocalConfig('baitPenaltyMult', value)}
               min={0}
               max={1}
               step={0.05}
@@ -248,8 +263,8 @@ export default function SimulationControls({
               label="Base Reach Min 📡"
               tooltip="Base exposure budget per post before attribute/follower effects."
               id="reachMin"
-              value={config.reachMin}
-              onChange={(value) => updateConfig('reachMin', Math.round(value))}
+              value={localConfig.reachMin}
+              onChange={(value) => updateLocalConfig('reachMin', Math.round(value))}
               min={1}
               max={10000}
               step={1}
@@ -258,8 +273,8 @@ export default function SimulationControls({
               label="Base Reach Max 📡"
               tooltip="Upper bound for base exposure before effects."
               id="reachMax"
-              value={config.reachMax}
-              onChange={(value) => updateConfig('reachMax', Math.round(value))}
+              value={localConfig.reachMax}
+              onChange={(value) => updateLocalConfig('reachMax', Math.round(value))}
               min={1}
               max={10000}
               step={1}
@@ -271,8 +286,8 @@ export default function SimulationControls({
               label="Vibe Flag Multiplier 🏷️"
               tooltip="If Vibe tag is on, we multiply bait flag probability by this (lower is more protective). 0.5–0.8 typical."
               id="vibeFlagMult"
-              value={config.vibeFlagMult}
-              onChange={(value) => updateConfig('vibeFlagMult', value)}
+              value={localConfig.vibeFlagMult}
+              onChange={(value) => updateLocalConfig('vibeFlagMult', value)}
               min={0.1}
               max={1}
               step={0.05}
@@ -281,8 +296,8 @@ export default function SimulationControls({
               label="Polarization Coupling ⚖️"
               tooltip="Couples extremes: more SA makes SD more likely and vice versa. 0 = off, 0.1–0.2 = moderate, 0.4+ = intense polarization."
               id="polarCoupling"
-              value={config.polarCoupling}
-              onChange={(value) => updateConfig('polarCoupling', value)}
+              value={localConfig.polarCoupling}
+              onChange={(value) => updateLocalConfig('polarCoupling', value)}
               min={0}
               max={0.5}
             />
@@ -299,8 +314,8 @@ export default function SimulationControls({
               label="Vibe Humor Penalty 🤐"
               tooltip="When Vibe is on: humor *= (1 − x). 0.15 reduces humor by 15% to steer earnest tone."
               id="vibeHumorPenalty"
-              value={config.vibeHumorPenalty}
-              onChange={(value) => updateConfig('vibeHumorPenalty', value)}
+              value={localConfig.vibeHumorPenalty}
+              onChange={(value) => updateLocalConfig('vibeHumorPenalty', value)}
               min={0}
               max={0.9}
               step={0.05}
@@ -309,8 +324,8 @@ export default function SimulationControls({
               label="Vibe Controversy Penalty 🧊"
               tooltip="When Vibe is on: controversy *= (1 − x). 0.25 trims spiciness by 25%."
               id="vibeControversyPenalty"
-              value={config.vibeControversyPenalty}
-              onChange={(value) => updateConfig('vibeControversyPenalty', value)}
+              value={localConfig.vibeControversyPenalty}
+              onChange={(value) => updateLocalConfig('vibeControversyPenalty', value)}
               min={0}
               max={0.9}
               step={0.05}
@@ -322,8 +337,8 @@ export default function SimulationControls({
               label="Vibe Insight Boost 🧠✨"
               tooltip="When Vibe is on: insight *= (1 + x). 0.20 = +20%."
               id="vibeInsightBoost"
-              value={config.vibeInsightBoost}
-              onChange={(value) => updateConfig('vibeInsightBoost', value)}
+              value={localConfig.vibeInsightBoost}
+              onChange={(value) => updateLocalConfig('vibeInsightBoost', value)}
               min={0}
               max={1}
               step={0.05}
@@ -332,8 +347,8 @@ export default function SimulationControls({
               label="Vibe Comment Boost 💬⬆️"
               tooltip="When Vibe is on: commentProb *= (1 + x). 0.20 adds 20% more comments."
               id="vibeCommentBoost"
-              value={config.vibeCommentBoost}
-              onChange={(value) => updateConfig('vibeCommentBoost', value)}
+              value={localConfig.vibeCommentBoost}
+              onChange={(value) => updateLocalConfig('vibeCommentBoost', value)}
               min={0}
               max={1}
               step={0.05}
@@ -345,8 +360,8 @@ export default function SimulationControls({
               label="Base Vibe Probability 🎯"
               tooltip="Starting probability for Normal users to use vibe tags. They'll learn from here. 0.05 = 5% chance initially."
               id="baseVibeProb"
-              value={config.baseVibeProb}
-              onChange={(value) => updateConfig('baseVibeProb', value)}
+              value={localConfig.baseVibeProb}
+              onChange={(value) => updateLocalConfig('baseVibeProb', value)}
               min={0}
               max={1}
               step={0.01}
@@ -364,8 +379,8 @@ export default function SimulationControls({
               label="Initial Followers Mean 👣"
               tooltip="Initial mean followers drawn from a noisy normal distribution."
               id="followersMean"
-              value={config.followersMean}
-              onChange={(value) => updateConfig('followersMean', Math.round(value))}
+              value={localConfig.followersMean}
+              onChange={(value) => updateLocalConfig('followersMean', Math.round(value))}
               min={0}
               max={100000}
               step={10}
@@ -374,8 +389,8 @@ export default function SimulationControls({
               label="Follower→Reach Factor 📈"
               tooltip="Diminishing returns: reach *= (1 + factor·log10(1+followers)). 0.10–0.25 typical."
               id="followerReachFactor"
-              value={config.followerReachFactor}
-              onChange={(value) => updateConfig('followerReachFactor', value)}
+              value={localConfig.followerReachFactor}
+              onChange={(value) => updateLocalConfig('followerReachFactor', value)}
               min={0}
               max={1}
             />
@@ -386,8 +401,8 @@ export default function SimulationControls({
               label="Global Audience K 🌍"
               tooltip="Larger K ⇒ more local (follower) views before global spillover."
               id="globalAudienceK"
-              value={config.globalAudienceK}
-              onChange={(value) => updateConfig('globalAudienceK', Math.round(value))}
+              value={localConfig.globalAudienceK}
+              onChange={(value) => updateLocalConfig('globalAudienceK', Math.round(value))}
               min={10}
               max={100000}
               step={10}
@@ -396,8 +411,8 @@ export default function SimulationControls({
               label="Homophily Strength 🫧"
               tooltip="Tilt local audience toward agreement. 0=no bubble; 1=strong bubble."
               id="homophilyStrength"
-              value={config.homophilyStrength}
-              onChange={(value) => updateConfig('homophilyStrength', value)}
+              value={localConfig.homophilyStrength}
+              onChange={(value) => updateLocalConfig('homophilyStrength', value)}
               min={0}
               max={1}
               step={0.05}
@@ -415,8 +430,8 @@ export default function SimulationControls({
               label="Strong Agree 💚"
               tooltip="Base utility weight for Strong Agree in reward. Type-specific utilities are blended 50/50 with these."
               id="wSA"
-              value={config.w.strong_agree}
-              onChange={(value) => updateNestedConfig('w', 'strong_agree', value)}
+              value={localConfig.w.strong_agree}
+              onChange={(value) => updateLocalNestedConfig('w', 'strong_agree', value)}
               min={-2}
               max={3}
               step={0.1}
@@ -425,8 +440,8 @@ export default function SimulationControls({
               label="Agree 👍"
               tooltip="Base utility for Agree."
               id="wA"
-              value={config.w.agree}
-              onChange={(value) => updateNestedConfig('w', 'agree', value)}
+              value={localConfig.w.agree}
+              onChange={(value) => updateLocalNestedConfig('w', 'agree', value)}
               min={-2}
               max={3}
               step={0.1}
@@ -438,8 +453,8 @@ export default function SimulationControls({
               label="Not Sure 🤔"
               tooltip="Base utility for Not Sure (can be positive if you want to reward nuance)."
               id="wNS"
-              value={config.w.not_sure}
-              onChange={(value) => updateNestedConfig('w', 'not_sure', value)}
+              value={localConfig.w.not_sure}
+              onChange={(value) => updateLocalNestedConfig('w', 'not_sure', value)}
               min={-2}
               max={3}
               step={0.1}
@@ -448,8 +463,8 @@ export default function SimulationControls({
               label="Disagree 👎"
               tooltip="Base utility for Disagree."
               id="wD"
-              value={config.w.disagree}
-              onChange={(value) => updateNestedConfig('w', 'disagree', value)}
+              value={localConfig.w.disagree}
+              onChange={(value) => updateLocalNestedConfig('w', 'disagree', value)}
               min={-2}
               max={3}
               step={0.1}
@@ -461,8 +476,8 @@ export default function SimulationControls({
               label="Strong Disagree 💔"
               tooltip="Base utility for Strong Disagree. Negative usually."
               id="wSD"
-              value={config.w.strong_disagree}
-              onChange={(value) => updateNestedConfig('w', 'strong_disagree', value)}
+              value={localConfig.w.strong_disagree}
+              onChange={(value) => updateLocalNestedConfig('w', 'strong_disagree', value)}
               min={-2}
               max={3}
               step={0.1}
@@ -480,8 +495,8 @@ export default function SimulationControls({
               label="Normal 🙂"
               tooltip="Baseline balanced actors."
               id="pctNormal"
-              value={config.mix.Normal}
-              onChange={(value) => updateNestedConfig('mix', 'Normal', Math.round(value))}
+              value={localConfig.mix.Normal}
+              onChange={(value) => updateLocalNestedConfig('mix', 'Normal', Math.round(value))}
               min={0}
               max={100}
               step={1}
@@ -490,8 +505,8 @@ export default function SimulationControls({
               label="Joker 😆"
               tooltip="Comedy & dunks."
               id="pctJoker"
-              value={config.mix.Joker}
-              onChange={(value) => updateNestedConfig('mix', 'Joker', Math.round(value))}
+              value={localConfig.mix.Joker}
+              onChange={(value) => updateLocalNestedConfig('mix', 'Joker', Math.round(value))}
               min={0}
               max={100}
               step={1}
@@ -503,8 +518,8 @@ export default function SimulationControls({
               label="Troll 😈"
               tooltip="Spicy & bait-prone."
               id="pctTroll"
-              value={config.mix.Troll}
-              onChange={(value) => updateNestedConfig('mix', 'Troll', Math.round(value))}
+              value={localConfig.mix.Troll}
+              onChange={(value) => updateLocalNestedConfig('mix', 'Troll', Math.round(value))}
               min={0}
               max={100}
               step={1}
@@ -513,8 +528,8 @@ export default function SimulationControls({
               label="Intellectual 🧐"
               tooltip="Insight & news oriented."
               id="pctIntel"
-              value={config.mix.Intellectual}
-              onChange={(value) => updateNestedConfig('mix', 'Intellectual', Math.round(value))}
+              value={localConfig.mix.Intellectual}
+              onChange={(value) => updateLocalNestedConfig('mix', 'Intellectual', Math.round(value))}
               min={0}
               max={100}
               step={1}
@@ -526,8 +541,8 @@ export default function SimulationControls({
               label="Journalist 📝"
               tooltip="High news propensity, high vibe usage."
               id="pctJourno"
-              value={config.mix.Journalist}
-              onChange={(value) => updateNestedConfig('mix', 'Journalist', Math.round(value))}
+              value={localConfig.mix.Journalist}
+              onChange={(value) => updateLocalNestedConfig('mix', 'Journalist', Math.round(value))}
               min={0}
               max={100}
               step={1}
@@ -546,8 +561,8 @@ export default function SimulationControls({
               label="Boost Humor 😹"
               tooltip="Multiply humor by (1 + x). −1..+1. Set negative to de-boost."
               id="boostHumor"
-              value={config.boosts.humor}
-              onChange={(value) => updateNestedConfig('boosts', 'humor', value)}
+              value={localConfig.boosts.humor}
+              onChange={(value) => updateLocalNestedConfig('boosts', 'humor', value)}
               min={-1}
               max={1}
               step={0.05}
@@ -556,8 +571,8 @@ export default function SimulationControls({
               label="Boost Insight 🧠"
               tooltip="Multiply insight by (1 + x)."
               id="boostInsight"
-              value={config.boosts.insight}
-              onChange={(value) => updateNestedConfig('boosts', 'insight', value)}
+              value={localConfig.boosts.insight}
+              onChange={(value) => updateLocalNestedConfig('boosts', 'insight', value)}
               min={-1}
               max={1}
               step={0.05}
@@ -569,8 +584,8 @@ export default function SimulationControls({
               label="Boost Bait 🪤"
               tooltip="Multiply bait by (1 + x). Use negative to de-boost bait."
               id="boostBait"
-              value={config.boosts.bait}
-              onChange={(value) => updateNestedConfig('boosts', 'bait', value)}
+              value={localConfig.boosts.bait}
+              onChange={(value) => updateLocalNestedConfig('boosts', 'bait', value)}
               min={-1}
               max={1}
               step={0.05}
@@ -579,8 +594,8 @@ export default function SimulationControls({
               label="Boost Controversy 🌶️"
               tooltip="Multiply controversy by (1 + x)."
               id="boostControversy"
-              value={config.boosts.controversy}
-              onChange={(value) => updateNestedConfig('boosts', 'controversy', value)}
+              value={localConfig.boosts.controversy}
+              onChange={(value) => updateLocalNestedConfig('boosts', 'controversy', value)}
               min={-1}
               max={1}
               step={0.05}
