@@ -74,12 +74,9 @@ export default function Simulation() {
 
   const handleRunSimulation = async (updatedConfig?: SimulationConfig) => {
     const configToUse = updatedConfig || config;
-    console.log('🏃 Simulation Page: handleRunSimulation called with config:', configToUse);
-    console.log('🏃 Simulation Page: Rounds from config:', configToUse.rounds);
     setIsRunning(true);
     try {
       const state = simulation.startSimulation(configToUse);
-      console.log('🏃 Simulation Page: Simulation completed with rounds done:', state.roundsDone);
       setSimulationState(state);
     } catch (error) {
       console.error('Simulation failed:', error);
@@ -93,7 +90,6 @@ export default function Simulation() {
       return;
     }
     
-    console.log('🏃 Simulation Page: handleExtendSimulation called with config:', updatedConfig || 'using existing config');
     setIsRunning(true);
     try {
       const state = simulation.runMoreRounds(10);
