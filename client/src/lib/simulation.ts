@@ -134,6 +134,7 @@ const TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
 
 export class SimulationEngine {
   private state: SimulationState;
+  private lastConfig: SimulationConfig | null = null;
 
   constructor() {
     this.state = {
@@ -341,6 +342,7 @@ export class SimulationEngine {
   }
 
   startSimulation(cfg: SimulationConfig): SimulationState {
+    this.lastConfig = { ...cfg }; // Store the config for later use
     this.state.users = this.buildUsers(cfg.usersN, cfg.mix, cfg.learnRate, cfg.followersMean, cfg.baseVibeProb);
     this.state.rows = [];
     this.state.ref = 100;
@@ -370,22 +372,11 @@ export class SimulationEngine {
       throw new Error("No simulation running. Start a new simulation first.");
     }
     
-    // Use the last config - we should store this properly
-    const defaultConfig: SimulationConfig = {
-      usersN: 120, rounds: 80, learnRate: 0.15, baitRatioThresh: 0.10, baitPenaltyMult: 0.20,
-      reachMin: 30, reachMax: 150, vibeFlagMult: 0.6, polarCoupling: 0.12,
-      vibeHumorPenalty: 0.15, vibeControversyPenalty: 0.25, vibeInsightBoost: 0.20, vibeCommentBoost: 0.20,
-      vibeReachBoost: 0.10, followGainThresh: 1.30, followersMean: 200, followerReachFactor: 0.15,
-      globalAudienceK: 4000, homophilyStrength: 0.35, viralityThreshold: 1500, localFloor: 0.20,
-      followGainRate: 0.25, followLossRate: 0.30,
-      w: { strong_agree: 1.0, agree: 0.8, not_sure: 0.2, disagree: 0.0, strong_disagree: -0.6 },
-      boosts: { humor: 0, insight: 0, bait: 0, controversy: 0, news: 0, dunk: 0 },
-      mix: { Normal: 55, Joker: 10, Troll: 10, Intellectual: 15, Journalist: 10 },
-      baseVibeProb: 0.05,
-      maWindow: 10
-    };
+    if (!this.lastConfig) {
+      throw new Error("No configuration stored. Cannot extend simulation.");
+    }
     
-    this.runRounds(n, defaultConfig);
+    this.runRounds(n, this.lastConfig);
     return { ...this.state };
   }
 
