@@ -342,6 +342,8 @@ export class SimulationEngine {
   }
 
   startSimulation(cfg: SimulationConfig): SimulationState {
+    console.log('⚙️ Simulation Engine: startSimulation called with config:', cfg);
+    console.log('⚙️ Simulation Engine: Will run', cfg.rounds, 'rounds');
     this.lastConfig = { ...cfg }; // Store the config for later use
     this.state.users = this.buildUsers(cfg.usersN, cfg.mix, cfg.learnRate, cfg.followersMean, cfg.baseVibeProb);
     this.state.rows = [];
@@ -363,7 +365,9 @@ export class SimulationEngine {
       this.state.seriesVibeByType[t] = [];
     }
 
+    console.log('⚙️ Simulation Engine: About to call runRounds with', cfg.rounds, 'rounds');
     this.runRounds(cfg.rounds, cfg);
+    console.log('⚙️ Simulation Engine: Completed', this.state.roundsDone, 'rounds');
     return { ...this.state };
   }
 

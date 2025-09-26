@@ -12,8 +12,8 @@ import { flushSync } from "react-dom";
 interface SimulationControlsProps {
   config: SimulationConfig;
   setConfig: (config: SimulationConfig | ((prev: SimulationConfig) => SimulationConfig)) => void;
-  onRunSimulation: () => void;
-  onExtendSimulation: () => void;
+  onRunSimulation: (config?: SimulationConfig) => void;
+  onExtendSimulation: (config?: SimulationConfig) => void;
   onExportCsv: () => void;
   isRunning: boolean;
   canExtend: boolean;
@@ -231,17 +231,17 @@ export default function SimulationControls({
 
   // Wrapper functions that auto-apply changes before running simulations
   const handleRunSimulationWithUpdate = useCallback(() => {
-    flushSync(() => {
-      setConfig(localConfig);
-    });
-    onRunSimulation();
+    console.log('🔧 SimulationControls: About to apply config changes:', localConfig);
+    console.log('🔧 SimulationControls: Rounds being set to:', localConfig.rounds);
+    setConfig(localConfig);
+    console.log('🔧 SimulationControls: Calling onRunSimulation with updated config');
+    onRunSimulation(localConfig);
   }, [localConfig, setConfig, onRunSimulation]);
 
   const handleExtendSimulationWithUpdate = useCallback(() => {
-    flushSync(() => {
-      setConfig(localConfig);
-    });
-    onExtendSimulation();
+    console.log('🔧 SimulationControls: Extending simulation with config:', localConfig);
+    setConfig(localConfig);
+    onExtendSimulation(localConfig);
   }, [localConfig, setConfig, onExtendSimulation]);
 
   // Export configuration as JSON
