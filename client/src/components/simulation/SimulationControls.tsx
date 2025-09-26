@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SimulationConfig } from "@/lib/simulation";
 import { useState, useCallback, memo, useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 
 interface SimulationControlsProps {
   config: SimulationConfig;
@@ -228,9 +229,20 @@ export default function SimulationControls({
     }));
   }, []);
 
-  const applyChanges = useCallback(() => {
-    setConfig(localConfig);
-  }, [localConfig, setConfig]);
+  // Wrapper functions that auto-apply changes before running simulations
+  const handleRunSimulationWithUpdate = useCallback(() => {
+    flushSync(() => {
+      setConfig(localConfig);
+    });
+    onRunSimulation();
+  }, [localConfig, setConfig, onRunSimulation]);
+
+  const handleExtendSimulationWithUpdate = useCallback(() => {
+    flushSync(() => {
+      setConfig(localConfig);
+    });
+    onExtendSimulation();
+  }, [localConfig, setConfig, onExtendSimulation]);
 
   // Export configuration as JSON
   const exportConfig = useCallback(() => {
@@ -345,25 +357,15 @@ export default function SimulationControls({
 
             <p>The simulation also includes community-driven moderation: users can flag posts as "bait" (low-quality engagement farming), and when enough people agree, those posts get reduced reach. There's also a "vibe" system where users can tag posts as earnest discussion, which provides some protection from bait flags and shifts the content toward more thoughtful, less controversial discourse.</p>
 
-            <p className="font-semibold text-foreground">*REMEMBER TO HIT 'UPDATE VARIABLES' WHEN YOU CHANGE A SECTION BEFORE RUNNING THE SIM*</p>
+            <p className="font-semibold text-foreground">✨ Variable changes are now applied automatically when you run simulations!</p>
           </div>
         </Card>
 
         {/* Main Simulation Controls */}
         <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-accent">🛠️ Simulation Controls</h2>
-              <Badge variant="outline" className="text-xs">hover ℹ️ for details</Badge>
-            </div>
-            <Button 
-              onClick={applyChanges} 
-              variant="outline" 
-              size="sm"
-              data-testid="button-update-main"
-            >
-              Update Variables
-            </Button>
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-base font-semibold text-accent">🛠️ Simulation Controls</h2>
+            <Badge variant="outline" className="text-xs">hover ℹ️ for details</Badge>
           </div>
 
         <div className="space-y-4">
@@ -473,19 +475,9 @@ export default function SimulationControls({
 
       {/* Vibe Effects */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-semibold text-accent">🏷️ Vibe Effects</h3>
-            <p className="text-xs text-muted-foreground mt-1">How "vibe" tags affect post content and engagement when users mark posts as earnest discussion.</p>
-          </div>
-          <Button 
-            onClick={applyChanges} 
-            variant="outline" 
-            size="sm"
-            data-testid="button-update-vibe"
-          >
-            Update Variables
-          </Button>
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-accent">🏷️ Vibe Effects</h3>
+          <p className="text-xs text-muted-foreground mt-1">How "vibe" tags affect post content and engagement when users mark posts as earnest discussion.</p>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -551,19 +543,9 @@ export default function SimulationControls({
 
       {/* Network & Homophily */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-semibold text-accent">🌐 Network & Homophily</h3>
-            <p className="text-xs text-muted-foreground mt-1">Controls follower counts, how followers affect reach, and whether users see diverse content or stay in echo chambers.</p>
-          </div>
-          <Button 
-            onClick={applyChanges} 
-            variant="outline" 
-            size="sm"
-            data-testid="button-update-network"
-          >
-            Update Variables
-          </Button>
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-accent">🌐 Network & Homophily</h3>
+          <p className="text-xs text-muted-foreground mt-1">Controls follower counts, how followers affect reach, and whether users see diverse content or stay in echo chambers.</p>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -615,19 +597,9 @@ export default function SimulationControls({
 
       {/* Reaction Weights */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-semibold text-accent">🎯 Reaction Weights (base blend)</h3>
-            <p className="text-xs text-muted-foreground mt-1">How rewarding different reaction types feel to users—positive values make users seek that reaction type, negative values make them avoid it.</p>
-          </div>
-          <Button 
-            onClick={applyChanges} 
-            variant="outline" 
-            size="sm"
-            data-testid="button-update-reactions"
-          >
-            Update Variables
-          </Button>
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-accent">🎯 Reaction Weights (base blend)</h3>
+          <p className="text-xs text-muted-foreground mt-1">How rewarding different reaction types feel to users—positive values make users seek that reaction type, negative values make them avoid it.</p>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -693,19 +665,9 @@ export default function SimulationControls({
 
       {/* User Type Mix */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-semibold text-accent">🧬 User Type Mix (%)</h3>
-            <p className="text-xs text-muted-foreground mt-1">What percentage of users are each archetype—Normal (balanced), Joker (humor-focused), Troll (controversy-seeking), Intellectual (insight-driven), Journalist (news-oriented).</p>
-          </div>
-          <Button 
-            onClick={applyChanges} 
-            variant="outline" 
-            size="sm"
-            data-testid="button-update-usertypes"
-          >
-            Update Variables
-          </Button>
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-accent">🧬 User Type Mix (%)</h3>
+          <p className="text-xs text-muted-foreground mt-1">What percentage of users are each archetype—Normal (balanced), Joker (humor-focused), Troll (controversy-seeking), Intellectual (insight-driven), Journalist (news-oriented).</p>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -772,19 +734,9 @@ export default function SimulationControls({
 
       {/* Post Attribute Boosts */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-semibold text-accent">🧪 Post Attribute Boosts (−1 to +1)</h3>
-            <p className="text-xs text-muted-foreground mt-1">Platform-wide modifiers that reward or punish specific types of content—positive values boost engagement for that content type.</p>
-          </div>
-          <Button 
-            onClick={applyChanges} 
-            variant="outline" 
-            size="sm"
-            data-testid="button-update-boosts"
-          >
-            Update Variables
-          </Button>
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-accent">🧪 Post Attribute Boosts (−1 to +1)</h3>
+          <p className="text-xs text-muted-foreground mt-1">Platform-wide modifiers that reward or punish specific types of content—positive values boost engagement for that content type.</p>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -841,7 +793,7 @@ export default function SimulationControls({
         <div className="flex flex-wrap gap-3">
           <Button
             data-testid="button-run-simulation"
-            onClick={onRunSimulation}
+            onClick={handleRunSimulationWithUpdate}
             disabled={isRunning}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
@@ -850,7 +802,7 @@ export default function SimulationControls({
 
           <Button
             data-testid="button-extend-simulation"
-            onClick={onExtendSimulation}
+            onClick={handleExtendSimulationWithUpdate}
             disabled={!canExtend || isRunning}
             variant="secondary"
           >
