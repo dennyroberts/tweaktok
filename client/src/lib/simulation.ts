@@ -261,12 +261,6 @@ export class SimulationEngine {
     // Much stronger multiplier range for bigger differences between good/bad posts
     let reach = base * (0.3 + 2.0 * positive);  // Changed from 0.6 + 1.0 to 0.3 + 2.0 for 5x range
 
-    const synergy =
-      eff.humor * eff.insight +
-      eff.insight * eff.news +
-      eff.humor * eff.news +
-      0.6 * eff.dunk * eff.humor;
-    reach *= 1 + 0.6 * synergy;
     reach *= 1 + followerFactor * Math.log10(1 + followers);
 
     if (vibeOn) reach *= 1 + vibeReachBoost;
