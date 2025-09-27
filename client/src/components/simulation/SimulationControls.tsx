@@ -399,12 +399,12 @@ export default function SimulationControls({
             />
             <StableInput
               label="Bait Ratio Threshold 🚩"
-              tooltip="Users can flag posts as 'bait' (low-quality engagement farming). If enough people agree a post is bait (ratio crosses this threshold), we reduce that post's engagement reach. Think of it as community-driven content moderation. Higher values = harder to flag posts as bait (less sensitive). Lower values = easier to flag posts as bait (more sensitive)."
+              tooltip="Users can flag posts as 'bait' (low-quality engagement farming). If enough people agree a post is bait (ratio crosses this threshold), we reduce that post's engagement reach. Think of it as community-driven content moderation. Higher values = harder to flag posts as bait (less sensitive). Lower values = easier to flag posts as bait (more sensitive). Set to 1.0 to effectively disable bait penalties."
               id="baitRatioThresh"
               value={localConfig.baitRatioThresh}
               onChange={(value) => updateLocalConfig('baitRatioThresh', value)}
               min={0.01}
-              max={0.8}
+              max={1.0}
             />
           </div>
 
