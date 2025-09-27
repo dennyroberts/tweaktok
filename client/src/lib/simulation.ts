@@ -437,7 +437,7 @@ export class SimulationEngine {
       : 0;
     const loss =
       cfg.followLossRate *
-      Math.max(0, baitRatio - cfg.baitRatioThresh / 2) *
+      Math.max(0, baitRatio - cfg.baitRatioThresh) *
       10;
     const delta = Math.round(gain - loss);
     user.followers = Math.max(0, user.followers + delta);
