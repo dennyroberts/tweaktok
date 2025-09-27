@@ -248,10 +248,18 @@ export class SimulationEngine {
     vibeReachBoost: number,
   ): number {
     const base = Math.floor(minR + Math.random() * (maxR - minR));
+
+    // Combined positive score with proper weighting: humor & bait strongest, then insight, news, controversy, dunk
     const positive =
-      0.45 * eff.humor + 0.55 * eff.insight + 0.4 * eff.news + 0.25 * eff.dunk;
-    const penalty = 0.25 * eff.bait;
-    let reach = base * (0.6 + 1.0 * positive - 0.35 * penalty);
+      0.8 * eff.humor +      // Strongest - humor drives engagement
+      0.8 * eff.bait +       // Strongest - bait tactics work
+      0.6 * eff.insight +    // Good but not as viral
+      0.5 * eff.news +       // News value helps
+      0.4 * eff.controversy + // Controversy drives engagement but less than humor/bait
+      0.3 * eff.dunk;        // Weakest - dunking is niche
+
+    // Much stronger multiplier range for bigger differences between good/bad posts
+    let reach = base * (0.3 + 2.0 * positive);  // Changed from 0.6 + 1.0 to 0.3 + 2.0 for 5x range
 
     const synergy =
       eff.humor * eff.insight +
