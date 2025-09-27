@@ -264,7 +264,7 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                         </div>
                       </div>
                     );
-                  })}</div>
+                  })}
                 </div>
               </div>
             )}
@@ -351,7 +351,8 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                         </div>
                       </div>
                     );
-                  })}</div>
+                  })}
+                </div>
                 </div>
               </div>
             )}
@@ -413,7 +414,8 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                         </div>
                       </div>
                     );
-                  })}</div>
+                  })}
+                </div>
                 </div>
               </div>
             )}
