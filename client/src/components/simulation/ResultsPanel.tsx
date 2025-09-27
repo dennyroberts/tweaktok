@@ -241,7 +241,13 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                 <div className="space-y-2 text-xs">
                   {['humor', 'insight', 'bait', 'controversy', 'news', 'dunk'].map((attr, index) => {
                     const start = simulationState.seriesAttrs[0]?.[index] || 0;
-                    const current = simulationState.seriesAttrs[simulationState.seriesAttrs.length - 1]?.[index] || 0;
+                    
+                    // Calculate average of last 10 values instead of just the last value
+                    const last10 = simulationState.seriesAttrs.slice(-10);
+                    const current = last10.length > 0 
+                      ? last10.reduce((sum, dataPoint) => sum + (dataPoint[index] || 0), 0) / last10.length
+                      : 0;
+                    
                     const change = current - start;
                     const changePercent = start > 0 ? ((change / start) * 100) : 0;
                     
@@ -258,7 +264,7 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                         </div>
                       </div>
                     );
-                  })}
+                  })}</div>
                 </div>
               </div>
             )}
@@ -320,7 +326,13 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                     
                     const attrIndex = ['humor', 'insight', 'bait', 'controversy', 'news', 'dunk'].indexOf(selectedAttribute);
                     const start = typeData[0]?.[attrIndex] || 0;
-                    const current = typeData[typeData.length - 1]?.[attrIndex] || 0;
+                    
+                    // Calculate average of last 10 values instead of just the last value
+                    const last10 = typeData.slice(-10);
+                    const current = last10.length > 0 
+                      ? last10.reduce((sum, dataPoint) => sum + (dataPoint[attrIndex] || 0), 0) / last10.length
+                      : 0;
+                    
                     const change = current - start;
                     const changePercent = start > 0 ? ((change / start) * 100) : 0;
                     
@@ -339,7 +351,7 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                         </div>
                       </div>
                     );
-                  })}
+                  })}</div>
                 </div>
               </div>
             )}
@@ -378,7 +390,13 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                   {['humor', 'insight', 'bait', 'controversy', 'news', 'dunk'].map((attr, index) => {
                     const typeData = simulationState.seriesAttrsByType[selectedTypeMix] || [];
                     const start = typeData[0]?.[index] || 0;
-                    const current = typeData[typeData.length - 1]?.[index] || 0;
+                    
+                    // Calculate average of last 10 values instead of just the last value
+                    const last10 = typeData.slice(-10);
+                    const current = last10.length > 0 
+                      ? last10.reduce((sum, dataPoint) => sum + (dataPoint[index] || 0), 0) / last10.length
+                      : 0;
+                    
                     const change = current - start;
                     const changePercent = start > 0 ? ((change / start) * 100) : 0;
                     
@@ -395,7 +413,7 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                         </div>
                       </div>
                     );
-                  })}
+                  })}</div>
                 </div>
               </div>
             )}
