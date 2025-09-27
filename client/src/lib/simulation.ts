@@ -581,6 +581,13 @@ export class SimulationEngine {
           u.type === "Joker" || u.type === "Troll"
             ? false
             : Math.random() < u.vibeStrategy;
+
+        // Apply news-controversy correlation: if news > controversy, set controversy = news
+        // BUT only if vibe is NOT active (vibe reduces controversy, so we preserve that)
+        if (!vibeOn && attrs.news > attrs.controversy) {
+          attrs.controversy = attrs.news;
+        }
+
         let eff = { ...attrs };
         eff = this.vibeAdjust(eff, vibeOn, cfg);
         eff = this.applyBoosts(eff, cfg.boosts);
