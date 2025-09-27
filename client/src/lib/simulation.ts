@@ -435,7 +435,7 @@ export class SimulationEngine {
     const cleared = reward > cfg.followGainThresh * ref;
     const gain = cleared
       ? cfg.followGainRate *
-        (2 * counts.strong_agree + 1 * counts.agree + 2 * comments)
+        (0.4 * counts.strong_agree + 0.2 * counts.agree + 0.4 * comments)
       : 0;
     const loss =
       cfg.followLossRate *
