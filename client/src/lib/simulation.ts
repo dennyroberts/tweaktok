@@ -126,12 +126,12 @@ function choiceWeighted<T>(opts: T[], weights: number[]): T {
 
 const TYPE_BIAS: Record<UserType, Record<Attribute, number>> = {
   Normal: {
-    humor: 0.5,
-    insight: 0.5,
-    bait: 0.3,
-    controversy: 0.3,
-    news: 0.5,
-    dunk: 0.3,
+    humor: 0.3,      // Reduced - normal people aren't naturally funny
+    insight: 0.3,    // Reduced - normal people aren't naturally insightful  
+    bait: 0.2,       // Reduced - normal people don't use much bait
+    controversy: 0.2, // Reduced - normal people avoid controversy
+    news: 0.3,       // Reduced - normal people don't focus on news
+    dunk: 0.2,       // Reduced - normal people don't dunk much
   },
   Joker: {
     humor: 0.8,
