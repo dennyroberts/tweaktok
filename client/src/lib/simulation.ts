@@ -171,8 +171,8 @@ const VIBE_PROB: Record<UserType, number> = {
   Normal: 0.25,
   Joker: 0.0,
   Troll: 0.0,
-  Intellectual: 0.4,
-  Journalist: 0.4,
+  Intellectual: 0.1,
+  Journalist: 0.1,
 };
 
 const TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
@@ -435,12 +435,12 @@ export class SimulationEngine {
     const cleared = reward > cfg.followGainThresh * ref;
     const gain = cleared
       ? cfg.followGainRate *
-        (0.4 * counts.strong_agree + 0.2 * counts.agree + 0.4 * comments)
+        (0.8 * counts.strong_agree + 0.4 * counts.agree + 0.8 * comments)
       : 0;
     const loss =
       cfg.followLossRate *
       Math.max(0, baitRatio - cfg.baitRatioThresh) *
-      10;
+      20;
     const delta = Math.round(gain - loss);
     user.followers = Math.max(0, user.followers + delta);
   }
