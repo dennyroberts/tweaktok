@@ -226,12 +226,43 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
       {/* Attributes Chart */}
       <Card className="p-6">
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-accent">🧬 Attributes Over Time (All Users)</h3>
-          <canvas 
-            id="chartAttrsOverall" 
-            className="w-full h-50"
-            data-testid="chart-attributes-overall"
-          ></canvas>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-accent">🧬 Attributes Over Time (All Users)</h3>
+              <canvas 
+                id="chartAttrsOverall" 
+                className="w-full h-50"
+                data-testid="chart-attributes-overall"
+              ></canvas>
+            </div>
+            {simulationState.seriesAttrs.length > 0 && (
+              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+                <div className="text-xs font-medium text-muted-foreground mb-3">Attribute Changes</div>
+                <div className="space-y-2 text-xs">
+                  {['humor', 'insight', 'bait', 'controversy', 'news', 'dunk'].map((attr, index) => {
+                    const start = simulationState.seriesAttrs[0]?.[index] || 0;
+                    const current = simulationState.seriesAttrs[simulationState.seriesAttrs.length - 1]?.[index] || 0;
+                    const change = current - start;
+                    const changePercent = start > 0 ? ((change / start) * 100) : 0;
+                    
+                    return (
+                      <div key={attr} className="flex justify-between items-center py-1">
+                        <span className="text-muted-foreground capitalize">{attr}:</span>
+                        <div className="text-right">
+                          <div className="text-foreground">
+                            {start.toFixed(3)} → {current.toFixed(3)}
+                          </div>
+                          <div className={`text-xs ${change >= 0 ? 'text-sim-green' : 'text-sim-red'}`}>
+                            {change >= 0 ? '+' : ''}{change.toFixed(3)} ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(1)}%)
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-4">
             <Label htmlFor="attrSelect" className="text-sm">Show by type for attribute:</Label>
@@ -269,11 +300,50 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
             ))}
           </div>
 
-          <canvas 
-            id="chartAttrsByType" 
-            className="w-full h-50"
-            data-testid="chart-attributes-by-type"
-          ></canvas>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <canvas 
+                id="chartAttrsByType" 
+                className="w-full h-50"
+                data-testid="chart-attributes-by-type"
+              ></canvas>
+            </div>
+            {simulationState.seriesAttrsByType && Object.keys(simulationState.seriesAttrsByType).length > 0 && (
+              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+                <div className="text-xs font-medium text-muted-foreground mb-3">
+                  {selectedAttribute.charAt(0).toUpperCase() + selectedAttribute.slice(1)} by Type
+                </div>
+                <div className="space-y-2 text-xs">
+                  {USER_TYPES.filter(type => visibleTypes.has(type)).map(type => {
+                    const typeData = simulationState.seriesAttrsByType[type] || [];
+                    if (typeData.length === 0) return null;
+                    
+                    const attrIndex = ['humor', 'insight', 'bait', 'controversy', 'news', 'dunk'].indexOf(selectedAttribute);
+                    const start = typeData[0]?.[attrIndex] || 0;
+                    const current = typeData[typeData.length - 1]?.[attrIndex] || 0;
+                    const change = current - start;
+                    const changePercent = start > 0 ? ((change / start) * 100) : 0;
+                    
+                    return (
+                      <div key={type} className="py-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">{type}:</span>
+                          <div className="text-right">
+                            <div className="text-foreground">
+                              {start.toFixed(3)} → {current.toFixed(3)}
+                            </div>
+                            <div className={`text-xs ${change >= 0 ? 'text-sim-green' : 'text-sim-red'}`}>
+                              {change >= 0 ? '+' : ''}{change.toFixed(3)} ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(1)}%)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-4">
             <Label htmlFor="mixTypeSelect" className="text-sm">Type attribute mix over time (pick one type):</Label>
@@ -291,11 +361,45 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
             </Select>
           </div>
 
-          <canvas 
-            id="chartTypeMix" 
-            className="w-full h-50"
-            data-testid="chart-type-mix"
-          ></canvas>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <canvas 
+                id="chartTypeMix" 
+                className="w-full h-50"
+                data-testid="chart-type-mix"
+              ></canvas>
+            </div>
+            {simulationState.seriesAttrsByType[selectedTypeMix]?.length > 0 && (
+              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+                <div className="text-xs font-medium text-muted-foreground mb-3">
+                  {selectedTypeMix} Attribute Changes
+                </div>
+                <div className="space-y-2 text-xs">
+                  {['humor', 'insight', 'bait', 'controversy', 'news', 'dunk'].map((attr, index) => {
+                    const typeData = simulationState.seriesAttrsByType[selectedTypeMix] || [];
+                    const start = typeData[0]?.[index] || 0;
+                    const current = typeData[typeData.length - 1]?.[index] || 0;
+                    const change = current - start;
+                    const changePercent = start > 0 ? ((change / start) * 100) : 0;
+                    
+                    return (
+                      <div key={attr} className="flex justify-between items-center py-1">
+                        <span className="text-muted-foreground capitalize">{attr}:</span>
+                        <div className="text-right">
+                          <div className="text-foreground">
+                            {start.toFixed(3)} → {current.toFixed(3)}
+                          </div>
+                          <div className={`text-xs ${change >= 0 ? 'text-sim-green' : 'text-sim-red'}`}>
+                            {change >= 0 ? '+' : ''}{change.toFixed(3)} ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(1)}%)
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
 
