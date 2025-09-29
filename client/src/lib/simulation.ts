@@ -126,12 +126,12 @@ function choiceWeighted<T>(opts: T[], weights: number[]): T {
 
 const TYPE_BIAS: Record<UserType, Record<Attribute, number>> = {
   Normal: {
-    humor: 0.3,      // Reduced - normal people aren't naturally funny
-    insight: 0.3,    // Reduced - normal people aren't naturally insightful  
-    bait: 0.2,       // Reduced - normal people don't use much bait
-    controversy: 0.2, // Reduced - normal people avoid controversy
-    news: 0.3,       // Reduced - normal people don't focus on news
-    dunk: 0.2,       // Reduced - normal people don't dunk much
+    humor: 0.3,
+    insight: 0.3,
+    bait: 0.3,
+    controversy: 0.3,
+    news: 0.3,
+    dunk: 0.3,
   },
   Joker: {
     humor: 0.8,
@@ -142,7 +142,7 @@ const TYPE_BIAS: Record<UserType, Record<Attribute, number>> = {
     dunk: 0.6,
   },
   Troll: {
-    humor: 0.3,
+    humor: 0.4, // trolls can be funny, but only to the right audience, so they start with an average score
     insight: 0.1,
     bait: 0.8,
     controversy: 0.8,
@@ -158,17 +158,17 @@ const TYPE_BIAS: Record<UserType, Record<Attribute, number>> = {
     dunk: 0.1,
   },
   Journalist: {
-    humor: 0.25,
-    insight: 0.55,
+    humor: 0.2,
+    insight: 0.6,
     bait: 0.1,
-    controversy: 0.2,
+    controversy: 0.3,
     news: 0.9,
     dunk: 0.1,
   },
 };
 
 const VIBE_PROB: Record<UserType, number> = {
-  Normal: 0.25,
+  Normal: 0.1,
   Joker: 0.0,
   Troll: 0.0,
   Intellectual: 0.1,
@@ -180,7 +180,7 @@ const TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
   Joker: { SA: 1.2, A: 1.1, NS: -0.2, D: -0.4, SD: -1.0 },
   Intellectual: { SA: 0.9, A: 1.0, NS: 0.6, D: 0.6, SD: -0.7 },
   Journalist: { SA: 0.8, A: 1.0, NS: 0.7, D: 0.7, SD: -0.7 },
-  Troll: { SA: 1.1, A: -0.6, NS: -0.8, D: -0.6, SD: 1.2 },
+  Troll: { SA: 1.1, A: 0.5, NS: -0.8, D: -0.6, SD: 1.2 },
 };
 
 export class SimulationEngine {
@@ -251,15 +251,15 @@ export class SimulationEngine {
 
     // Combined positive score with proper weighting: humor & bait strongest, then insight, news, controversy, dunk
     const positive =
-      0.8 * eff.humor +      // Strongest - humor drives engagement
-      0.8 * eff.bait +       // Strongest - bait tactics work
-      0.5 * eff.insight +    // Good but not as viral
-      0.4 * eff.news +       // News value helps
+      0.8 * eff.humor + // Strongest - humor drives engagement
+      0.8 * eff.bait + // Strongest - bait tactics work
+      0.5 * eff.insight + // Good but not as viral
+      0.4 * eff.news + // News value helps
       0.6 * eff.controversy + // Controversy drives engagement but less than humor/bait
-      0.3 * eff.dunk;        // Weakest - dunking is niche
+      0.3 * eff.dunk; // Weakest - dunking is niche
 
     // Much stronger multiplier range for bigger differences between good/bad posts
-    let reach = base * (0.3 + 2.0 * positive);  // Changed from 0.6 + 1.0 to 0.3 + 2.0 for 5x range
+    let reach = base * (0.3 + 2.0 * positive); // Changed from 0.6 + 1.0 to 0.3 + 2.0 for 5x range
 
     reach *= 1 + followerFactor * Math.log10(1 + followers);
 
@@ -438,9 +438,7 @@ export class SimulationEngine {
         (0.8 * counts.strong_agree + 0.4 * counts.agree + 0.8 * comments)
       : 0;
     const loss =
-      cfg.followLossRate *
-      Math.max(0, baitRatio - cfg.baitRatioThresh) *
-      20;
+      cfg.followLossRate * Math.max(0, baitRatio - cfg.baitRatioThresh) * 20;
     const delta = Math.round(gain - loss);
     user.followers = Math.max(0, user.followers + delta);
   }
