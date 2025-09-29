@@ -253,9 +253,9 @@ export class SimulationEngine {
     const positive =
       0.8 * eff.humor +      // Strongest - humor drives engagement
       0.8 * eff.bait +       // Strongest - bait tactics work
-      0.6 * eff.insight +    // Good but not as viral
-      0.5 * eff.news +       // News value helps
-      0.4 * eff.controversy + // Controversy drives engagement but less than humor/bait
+      0.5 * eff.insight +    // Good but not as viral
+      0.4 * eff.news +       // News value helps
+      0.6 * eff.controversy + // Controversy drives engagement but less than humor/bait
       0.3 * eff.dunk;        // Weakest - dunking is niche
 
     // Much stronger multiplier range for bigger differences between good/bad posts

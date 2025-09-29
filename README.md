@@ -2,7 +2,7 @@
 
 A React-based application that models social media discourse dynamics, user behavior patterns, and platform mechanics. This simulation explores how different user types interact, how content spreads, and how platform policies affect overall discourse quality.
 
-*Note: This README was generated with assistance from AI language models.*
+*Note: This README was mostly generated with assistance from AI language models.*
 
 ## Overview
 
@@ -41,16 +41,18 @@ Posts are characterized by six key dimensions:
 The simulation is built on several key behavioral assumptions:
 
 ### Content Performance
-- **Humor + Bait = Viral**: Funny content and engagement tactics drive the most reach
-- **News = Controversy**: News content naturally generates controversial discussions
-- **Insight Takes Time**: Thoughtful content gets steady but slower engagement
-- **Quality vs. Quantity**: Platform policies can shift the balance between these approaches
+- **Humor and Bait do Well**: Funny content and engagement tactics drive the most reach. This is followed by Controversy, Insight, News and Dunk in that order.
+- **Bait, Controversy, and Dunks Get the Most Comments**: People are compelled to comment on things that trigger their tribalism.
+- **Bait, Controversy, and Dunks Get the Most Flags**: For the same reason, these posts also get flagged the most
+- **Agrees and Comments Translate to Increased Followers**: If a post gets Strong Agrees, Agrees, or Comments, that user's follower amount will go up
+- **News and Controversy are Conflated**: People interperet news as controversy: if a post's News score is higher than Controversy, we boost the Controversy score to match it
+- **Vibe Effects**: The tone system (vibe flagging) is meant to add context to a post, such as "earnest discussion". This reduces the probability a post will get flagged as bait. It also reduces Humor (earnest discussion isn't funny), Controversy (a hot take becomes just an opinion), increases Insight (because people know you've thought about this), and increases the number of comments you get (because you are encouraging discussion).
+
 
 ### User Behavior  
-- **Learning from Success**: Users adapt strategies based on what gets engagement
-- **Type-Specific Preferences**: Each user type has different utility functions for reactions
+- **Learning from Success**: Users adapt strategies based on what gets engagement. Negative engagement negatively reinforces (getting "Disagrees" might make you less likely to post that type of content). This is also different on a user-type basis (for example, Trolls like Strong Agrees *and* Strong Disagrees)
+- **Type-Specific Preferences**: Each user type has different base posting strengths / strategies, which they slowly revert to over time absent of learning
 - **Network Effects**: Follower count provides reach advantages with diminishing returns
-- **Homophily**: Users preferentially engage with like-minded content
 
 ### Platform Dynamics
 - **Moderation Effectiveness**: Community flagging can reduce reach of low-quality content
