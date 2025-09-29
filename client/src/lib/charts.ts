@@ -252,39 +252,62 @@ export class ChartManager {
     const colors = this.getChartColors();
     const typeColors = [colors.primary, colors.green, colors.orange, colors.red, colors.blue];
 
-    USER_TYPES.forEach((type, index) => {
-      const canvasId = `chartF_${type.charAt(0)}${type === 'Journalist' ? 'O' : ''}`;
+    // Find the maximum length across all series to create consistent labels
+    const maxLength = Math.max(...USER_TYPES.map(type => (state.seriesFollowersByType[type] || []).length));
+    const labels = Array.from({ length: maxLength }, (_, i) => i + 1);
+
+    const datasets = USER_TYPES.map((type, index) => {
       const rawData = state.seriesFollowersByType[type] || [];
-      const labels = Array.from({ length: rawData.length }, (_, i) => i + 1);
       const ma = this.movingAvg(rawData, 10);
       
-      this.initializeChart(canvasId, 'line', {
-        labels,
-        datasets: [
-          {
-            label: `${type} Followers (MA-10)`,
-            data: ma,
-            borderColor: typeColors[index],
-            backgroundColor: typeColors[index] + '20',
-            borderWidth: 3,
-            fill: false
-          }
-        ]
-      }, {
-        plugins: {
-          legend: {
-            display: false
-          },
-          title: {
-            display: true,
-            text: type,
+      return {
+        label: `${type} (MA-10)`,
+        data: ma,
+        borderColor: typeColors[index],
+        backgroundColor: typeColors[index] + '20',
+        borderWidth: 3,
+        fill: false,
+        tension: 0.1
+      };
+    });
+
+    this.initializeChart('chartFollowersCombined', 'line', {
+      labels,
+      datasets
+    }, {
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
             color: this.getChartColors().text,
             font: {
               size: 12
-            }
+            },
+            usePointStyle: true,
+            pointStyle: 'line'
           }
         }
-      });
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: this.getChartColors().muted
+          },
+          grid: {
+            color: 'hsl(217, 33%, 17%)'
+          }
+        },
+        x: {
+          ticks: {
+            color: this.getChartColors().muted
+          },
+          grid: {
+            color: 'hsl(217, 33%, 17%)'
+          }
+        }
+      }
     });
   }
 

@@ -195,30 +195,49 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
       {/* Followers Charts */}
       <Card className="p-6">
         <div className="space-y-6">
-          <div>
-            <h3 className="text-sm font-medium text-accent mb-3">👣 Followers Over Time (By Type)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Normal Users</h4>
-                <canvas id="chartF_N" className="w-full h-48" data-testid="chart-followers-normal"></canvas>
-              </div>
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Joker Users</h4>
-                <canvas id="chartF_J" className="w-full h-48" data-testid="chart-followers-joker"></canvas>
-              </div>
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Troll Users</h4>
-                <canvas id="chartF_T" className="w-full h-48" data-testid="chart-followers-troll"></canvas>
-              </div>
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Intellectual Users</h4>
-                <canvas id="chartF_I" className="w-full h-48" data-testid="chart-followers-intellectual"></canvas>
-              </div>
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground mb-2">Journalist Users</h4>
-                <canvas id="chartF_JO" className="w-full h-48" data-testid="chart-followers-journalist"></canvas>
-              </div>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-accent mb-3">👣 Followers Over Time (By Type)</h3>
+              <canvas id="chartFollowersCombined" className="w-full h-64" data-testid="chart-followers-combined"></canvas>
             </div>
+            {simulationState.seriesFollowersByType && Object.keys(simulationState.seriesFollowersByType).length > 0 && (
+              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+                <div className="text-xs font-medium text-muted-foreground mb-3">Follower Changes</div>
+                <div className="space-y-2 text-xs">
+                  {USER_TYPES.map(type => {
+                    const typeData = simulationState.seriesFollowersByType[type] || [];
+                    if (typeData.length === 0) return null;
+
+                    const start = typeData[0] || 0;
+
+                    // Calculate average of last 10 values instead of just the last value
+                    const last10 = typeData.slice(-10);
+                    const current = last10.length > 0 
+                      ? last10.reduce((sum, value) => sum + value, 0) / last10.length
+                      : 0;
+
+                    const change = current - start;
+                    const changePercent = start > 0 ? ((change / start) * 100) : 0;
+
+                    return (
+                      <div key={type} className="py-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">{type}:</span>
+                          <div className="text-right">
+                            <div className="text-foreground">
+                              {start.toFixed(0)} → {current.toFixed(0)}
+                            </div>
+                            <div className={`text-xs ${change >= 0 ? 'text-sim-green' : 'text-sim-red'}`}>
+                              {change >= 0 ? '+' : ''}{change.toFixed(0)} ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(1)}%)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>
