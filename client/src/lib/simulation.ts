@@ -414,11 +414,6 @@ export class SimulationEngine {
     user.vibeStrategy = clamp01(
       user.vibeStrategy + lr * adj * (vibeTarget - user.vibeStrategy),
     );
-
-    // Apply bias toward type-specific vibe probability (Normal users use configurable base)
-    const typeBias =
-      user.type === "Normal" ? 0.05 : VIBE_PROB[user.type] || 0.5;
-    user.vibeStrategy = clamp01(0.95 * user.vibeStrategy + 0.05 * typeBias);
   }
 
   private followerUpdate(
