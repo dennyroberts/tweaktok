@@ -308,17 +308,17 @@ export class SimulationEngine {
     
     if (strength > 0) {
       // Echo chamber: boost agrees, reduce disagrees
-      out.strong_agree *= 1 + 2 * strength;
-      out.agree *= 1 + strength;
-      out.disagree *= 1 - 0.8 * strength;
-      out.strong_disagree *= 1 - strength;
+      out.strong_agree *= 1 + strength; // 2x at max
+      out.agree *= 1 + strength; // 2x at max
+      out.disagree *= 1 - 0.9 * strength; // 10% at max (90% reduction)
+      out.strong_disagree *= 1 - 0.9 * strength; // 10% at max (90% reduction)
     } else if (strength < 0) {
       // Reverse echo chamber: boost disagrees, reduce agrees
       const absStrength = Math.abs(strength);
-      out.strong_agree *= 1 - absStrength;
-      out.agree *= 1 - 0.8 * absStrength;
-      out.disagree *= 1 + absStrength;
-      out.strong_disagree *= 1 + 2 * absStrength;
+      out.strong_agree *= 1 - 0.9 * absStrength; // 10% at max (90% reduction)
+      out.agree *= 1 - 0.9 * absStrength; // 10% at max (90% reduction)
+      out.disagree *= 1 + absStrength; // 2x at max
+      out.strong_disagree *= 1 + absStrength; // 2x at max
     }
 
     let t =
