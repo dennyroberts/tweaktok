@@ -19,14 +19,14 @@ interface SimulationControlsProps {
 }
 
 // Stable input component - defined once, never recreated
-const StableInput = memo(function StableInput({ 
-  label, 
-  tooltip, 
-  id, 
-  value, 
-  onChange, 
-  min, 
-  max, 
+const StableInput = memo(function StableInput({
+  label,
+  tooltip,
+  id,
+  value,
+  onChange,
+  min,
+  max,
   step = 0.01,
   type = "number"
 }: {
@@ -50,24 +50,24 @@ const StableInput = memo(function StableInput({
     // Allow empty, negative sign, digits, and one decimal point
     return /^-?\d*\.?\d*$/.test(s) && (s.match(/\./g) || []).length <= 1;
   }, []);
-  
+
   const parseDecimal = useCallback((s: string) => {
     if (s === '' || s === '-' || s === '.') return NaN;
     return parseFloat(s);
   }, []);
-  
+
   const clamp = useCallback((n: number, min: number, max: number) => {
     return Math.max(min, Math.min(max, n));
   }, []);
-  
+
   const quantize = useCallback((n: number, step: number) => {
     return Math.round(n / step) * step;
   }, []);
-  
+
   const format = useCallback((n: number) => {
     return n.toString();
   }, []);
-  
+
   // Only sync from external value when not focused
   useEffect(() => {
     if (!isFocused && format(value) !== text) {
@@ -86,66 +86,66 @@ const StableInput = memo(function StableInput({
   const handleBeforeInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
     const input = e.target as HTMLInputElement;
     const data = (e as any).data;
-    
+
     if (!data) return; // Allow deletions, backspace, etc.
-    
+
     // Get what the text would be after this input
     const start = input.selectionStart || 0;
     const end = input.selectionEnd || 0;
     const newText = text.substring(0, start) + data + text.substring(end);
-    
+
     // Block if it would create an invalid partial value
     if (!isValidPartial(newText)) {
       e.preventDefault();
     }
   }, [text, isValidPartial]);
-  
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     // Allow navigation keys
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Escape'].includes(e.key)) {
       return;
     }
-    
+
     // Allow deletion keys
     if (['Backspace', 'Delete'].includes(e.key)) {
       return;
     }
-    
+
     // Allow copy/paste/cut
     if (e.ctrlKey || e.metaKey) {
       return;
     }
-    
+
     // Handle Enter to commit
     if (e.key === 'Enter') {
       inputRef.current?.blur();
       return;
     }
-    
+
     // Block invalid characters
     if (!/^[\d.-]$/.test(e.key)) {
       e.preventDefault();
       return;
     }
-    
+
     // Additional validation for special characters
     const input = e.target as HTMLInputElement;
     const start = input.selectionStart || 0;
     const end = input.selectionEnd || 0;
     const newText = text.substring(0, start) + e.key + text.substring(end);
-    
+
     if (!isValidPartial(newText)) {
       e.preventDefault();
     }
   }, [text, isValidPartial]);
-  
+
   const handleFocus = useCallback(() => {
     setIsFocused(true);
   }, []);
-  
+
   const handleBlur = useCallback(() => {
     setIsFocused(false);
-    
+
     // Parse and commit the value
     const parsed = parseDecimal(text);
     if (!isNaN(parsed)) {
@@ -538,15 +538,18 @@ export default function SimulationControls({
 
       {/* Network & Homophily */}
       <Card className="p-6">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-accent">🌐 Network & Homophily</h3>
-          <p className="text-xs text-muted-foreground mt-1">Controls follower counts, how followers affect reach, and whether users see diverse content or stay in echo chambers.</p>
-        </div>
         <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-medium text-foreground">🌐 Network & Echo Chamber</h3>
+            <span className="text-xs text-muted-foreground">
+              Controls follower counts and how much users see agreeable vs disagreeable content.
+            </span>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <StableInput
-              label="Initial Followers Mean 👣"
-              tooltip="In real social media, some people start with established audiences while others begin from zero. This sets the average starting follower count across all users. Think of it like whether you're simulating a platform of mostly new users or one where people already have some following. Higher values = users start more established. Lower values = users start as unknowns."
+              label="Initial Followers Mean 👥"
+              tooltip="Average number of followers each user starts with. This affects their initial reach - users with more followers get their posts seen by more people."
               id="followersMean"
               value={localConfig.followersMean}
               onChange={(value) => updateLocalConfig('followersMean', Math.round(value))}
@@ -555,8 +558,8 @@ export default function SimulationControls({
               step={10}
             />
             <StableInput
-              label="Follower→Reach Factor 📈"
-              tooltip="In real social media, having more followers helps your posts reach more people, but with diminishing returns—going from 10 to 100 followers matters more than going from 10,000 to 10,100. This controls how much your follower count affects how many people see each post. Higher values = big accounts dominate (like Twitter/X). Lower values = more democratic platform where good content can go viral regardless of follower count."
+              label="Follower→Reach Factor 📡"
+              tooltip="How much followers boost your post reach. Higher values mean having followers gives you much more visibility. Set to 0 to make follower count irrelevant to reach."
               id="followerReachFactor"
               value={localConfig.followerReachFactor}
               onChange={(value) => updateLocalConfig('followerReachFactor', value)}
@@ -565,26 +568,16 @@ export default function SimulationControls({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <StableInput
-              label="Global Audience K 🌍"
-              tooltip="This simulates how social media algorithms balance showing posts to your existing followers versus pushing them to a broader audience. Think of it like the difference between a post that spreads within your friend group first vs. one that immediately gets shown to strangers. Higher values = posts stay within follower bubbles longer (more personal/local). Lower values = posts break out to global audiences faster."
-              id="globalAudienceK"
-              value={localConfig.globalAudienceK}
-              onChange={(value) => updateLocalConfig('globalAudienceK', Math.round(value))}
-              min={10}
-              max={100000}
-              step={10}
-            />
-            <StableInput
-              label="Homophily Strength 🫧"
-              tooltip="This is the classic 'filter bubble' or 'echo chamber' effect. When you react positively to certain types of content, do you get shown more of the same (creating a bubble) or does the algorithm keep showing you diverse viewpoints? Real platforms vary widely on this. Higher values = strong filter bubbles where users mostly see content they already agree with. Lower values = diverse feeds that challenge users with different perspectives."
-              id="homophilyStrength"
-              value={localConfig.homophilyStrength}
-              onChange={(value) => updateLocalConfig('homophilyStrength', value)}
-              min={0}
+              label="Echo Chamber-ness 🔊"
+              tooltip="Controls who sees your posts. +1 = only people who agree with you (echo chamber: more agrees, fewer bait flags). -1 = only people who disagree with you (more disagrees, more bait flags). 0 = normal mix of agreeable and disagreeable people."
+              id="echoChamberStrength"
+              value={localConfig.echoChamberStrength}
+              onChange={(value) => updateLocalConfig('echoChamberStrength', value)}
+              min={-1}
               max={1}
-              step={0.05}
+              step={0.1}
             />
           </div>
         </div>

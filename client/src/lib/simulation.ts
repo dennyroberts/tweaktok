@@ -27,7 +27,7 @@ export interface SimulationConfig {
   reachMin: number;
   reachMax: number;
   vibeFlagMult: number;
-  polarCoupling: number;
+  echoChamberStrength: number;
   vibeHumorPenalty: number;
   vibeControversyPenalty: number;
   vibeInsightBoost: number;
@@ -36,8 +36,6 @@ export interface SimulationConfig {
   followGainThresh: number;
   followersMean: number;
   followerReachFactor: number;
-  globalAudienceK: number;
-  homophilyStrength: number;
   viralityThreshold: number;
   localFloor: number;
   followGainRate: number;
@@ -300,12 +298,28 @@ export class SimulationEngine {
     };
   }
 
-  private applyHomophily(probs: Record<string, number>, h: number) {
+  private applyEchoChamber(probs: Record<string, number>, strength: number) {
     const out = { ...probs };
-    out.strong_agree *= 1 + h;
-    out.agree *= 1 + 0.6 * h;
-    out.disagree *= 1 - 0.7 * h;
-    out.strong_disagree *= 1 - h;
+    
+    // strength ranges from -1 to +1
+    // +1 = only see agreeable content (echo chamber)
+    // -1 = only see disagreeable content (reverse echo chamber)
+    // 0 = normal mix
+    
+    if (strength > 0) {
+      // Echo chamber: boost agrees, reduce disagrees
+      out.strong_agree *= 1 + 2 * strength;
+      out.agree *= 1 + strength;
+      out.disagree *= 1 - 0.8 * strength;
+      out.strong_disagree *= 1 - strength;
+    } else if (strength < 0) {
+      // Reverse echo chamber: boost disagrees, reduce agrees
+      const absStrength = Math.abs(strength);
+      out.strong_agree *= 1 - absStrength;
+      out.agree *= 1 - 0.8 * absStrength;
+      out.disagree *= 1 + absStrength;
+      out.strong_disagree *= 1 + 2 * absStrength;
+    }
 
     let t =
       out.strong_agree +
@@ -327,9 +341,17 @@ export class SimulationEngine {
     eff: Record<Attribute, number>,
     vibeOn: boolean,
     flagMult: number,
+    echoChamberStrength: number,
   ): number {
     let p = 0.1 * eff.bait + 0.08 * eff.controversy + 0.06 * eff.dunk;
     if (vibeOn) p *= flagMult;
+    
+    // Echo chamber effect on bait flagging
+    // When echoChamberStrength is negative (disagreeable audience), 
+    // they're more likely to flag as bait
+    // When positive (agreeable audience), less likely to flag as bait
+    p *= 1 - 0.3 * echoChamberStrength;
+    
     return clamp01(0.01 + p);
   }
 
@@ -443,7 +465,6 @@ export class SimulationEngine {
     mix: Record<UserType, number>,
     learnRate: number,
     followersMean: number,
-    baseVibeProb: number,
   ): User[] {
     const entries = Object.entries(mix) as [UserType, number][];
     const total = entries.reduce((a, [, v]) => a + v, 0) || 1;
@@ -462,9 +483,8 @@ export class SimulationEngine {
         type: t,
         strategy: strat,
         vibeStrategy: clamp01(
-          (t === "Normal" ? baseVibeProb : VIBE_PROB[t] || 0.5) +
-            randNorm(0, 0.15),
-        ), // Initialize with configurable base + noise
+          VIBE_PROB[t] + randNorm(0, 0.15),
+        ),
         wReact: clamp01(0.5 + Math.random() * 0.4),
         learnRate,
         followers: Math.max(
@@ -483,7 +503,6 @@ export class SimulationEngine {
       cfg.mix,
       cfg.learnRate,
       cfg.followersMean,
-      cfg.baseVibeProb,
     );
     this.state.rows = [];
     this.state.ref = 100;
@@ -595,7 +614,7 @@ export class SimulationEngine {
           cfg.vibeReachBoost,
         );
         let probsBase = this.reactionProbs(eff);
-        let baitP = this.baitFlagProb(eff, vibeOn, cfg.vibeFlagMult);
+        let baitP = this.baitFlagProb(eff, vibeOn, cfg.vibeFlagMult, cfg.echoChamberStrength);
         let commentP = this.commentProb(eff, vibeOn, cfg.vibeCommentBoost);
 
         const counts = {
@@ -611,21 +630,8 @@ export class SimulationEngine {
           penalty = false;
 
         for (let i = 0; i < reachBudget; i++) {
-          let localShare = u.followers / (u.followers + cfg.globalAudienceK);
-          if (i > cfg.viralityThreshold)
-            localShare = Math.max(cfg.localFloor, 0.3 * localShare);
-          const isLocal = Math.random() < localShare;
-          let probs = isLocal
-            ? this.applyHomophily(probsBase, cfg.homophilyStrength)
-            : { ...probsBase };
-
-          // polarization coupling
-          const seen = Math.max(1, interactions);
-          const saRatio = counts.strong_agree / seen;
-          const sdRatio = counts.strong_disagree / seen;
-          const pc = cfg.polarCoupling;
-          probs.strong_disagree = clamp01(probs.strong_disagree + pc * saRatio);
-          probs.strong_agree = clamp01(probs.strong_agree + pc * sdRatio);
+          // Apply echo chamber effect to all interactions
+          let probs = this.applyEchoChamber(probsBase, cfg.echoChamberStrength);
 
           let tot =
             probs.strong_agree +
