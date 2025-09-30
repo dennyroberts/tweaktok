@@ -28,6 +28,7 @@ export interface SimulationConfig {
   reachMax: number;
   vibeFlagMult: number;
   echoChamberStrength: number;
+  polarCoupling: number;
   vibeHumorPenalty: number;
   vibeControversyPenalty: number;
   vibeInsightBoost: number;

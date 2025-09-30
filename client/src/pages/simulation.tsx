@@ -32,6 +32,7 @@ export default function Simulation() {
     reachMax: 150,
     vibeFlagMult: 0.6,
     echoChamberStrength: 0.0,
+    polarCoupling: 0.12,
     vibeHumorPenalty: 0.15,
     vibeControversyPenalty: 0.25,
     vibeInsightBoost: 0.20,
@@ -87,7 +88,7 @@ export default function Simulation() {
     if (simulationState.roundsDone === 0) {
       return;
     }
-    
+
     setIsRunning(true);
     try {
       const state = simulation.runMoreRounds(10);
@@ -133,7 +134,7 @@ export default function Simulation() {
           isRunning={isRunning}
           canExtend={simulationState.roundsDone > 0}
         />
-        
+
         <ResultsPanel
           simulationState={simulationState}
           isRunning={isRunning}
