@@ -1,0 +1,29 @@
+
+The above error occurred in the <StableInput2> component:
+
+StableInput2@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/src/components/simulation/SimulationControls.tsx:26:58
+div
+div
+div
+_c@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/src/components/ui/card.tsx:20:8
+div
+Provider@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LYFAO6LD.js?v=0173243b:22:47
+TooltipProvider@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0173243b:60:7
+SimulationControls@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/src/components/simulation/SimulationControls.tsx:187:43
+div
+div
+Simulation@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/src/pages/simulation.tsx:24:32
+Route@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0173243b:323:13
+Switch@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=0173243b:379:14
+Router
+Provider@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LYFAO6LD.js?v=0173243b:22:47
+TooltipProvider@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=0173243b:60:7
+QueryClientProvider@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=0173243b:2804:27
+App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+t@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630
+value@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766
+8988/value/this.asyncTimer<@https://0c9de667-6b22-4b90-8cee-d592b41d7173-00-i4ntrfzb5pjy.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+can't access property "toString", value is undefined
