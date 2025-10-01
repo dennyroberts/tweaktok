@@ -620,7 +620,7 @@ export default function SimulationControls({
                       step={0.1}
                       value={localConfig.typeUtilities[userType].SA}
                       onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.SA`, parseFloat(e.target.value))}
-                      className="w-16 text-xs p-1 border rounded text-center"
+                      className="w-16 text-xs p-1 border rounded text-center bg-background text-foreground border-border"
                     />
                   </td>
                   <td className="p-1">
@@ -631,7 +631,7 @@ export default function SimulationControls({
                       step={0.1}
                       value={localConfig.typeUtilities[userType].A}
                       onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.A`, parseFloat(e.target.value))}
-                      className="w-16 text-xs p-1 border rounded text-center"
+                      className="w-16 text-xs p-1 border rounded text-center bg-background text-foreground border-border"
                     />
                   </td>
                   <td className="p-1">
@@ -642,7 +642,7 @@ export default function SimulationControls({
                       step={0.1}
                       value={localConfig.typeUtilities[userType].NS}
                       onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.NS`, parseFloat(e.target.value))}
-                      className="w-16 text-xs p-1 border rounded text-center"
+                      className="w-16 text-xs p-1 border rounded text-center bg-background text-foreground border-border"
                     />
                   </td>
                   <td className="p-1">
@@ -653,7 +653,7 @@ export default function SimulationControls({
                       step={0.1}
                       value={localConfig.typeUtilities[userType].D}
                       onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.D`, parseFloat(e.target.value))}
-                      className="w-16 text-xs p-1 border rounded text-center"
+                      className="w-16 text-xs p-1 border rounded text-center bg-background text-foreground border-border"
                     />
                   </td>
                   <td className="p-1">
@@ -664,7 +664,7 @@ export default function SimulationControls({
                       step={0.1}
                       value={localConfig.typeUtilities[userType].SD}
                       onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.SD`, parseFloat(e.target.value))}
-                      className="w-16 text-xs p-1 border rounded text-center"
+                      className="w-16 text-xs p-1 border rounded text-center bg-background text-foreground border-border"
                     />
                   </td>
                 </tr>
