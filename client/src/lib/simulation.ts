@@ -50,7 +50,6 @@ export interface SimulationConfig {
   };
   boosts: Record<Attribute, number>;
   mix: Record<UserType, number>;
-  baseVibeProb: number; // Base probability for Normal users to start using vibe tags
   maWindow: number;
 }
 
