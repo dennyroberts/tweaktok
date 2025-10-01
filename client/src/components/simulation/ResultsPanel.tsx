@@ -555,18 +555,18 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
       {/* Top 10 Posts */}
       <Card className="p-6">
         <h3 className="text-sm font-medium text-accent mb-4">🏆 Top 10 Most Successful Posts (this run)</h3>
-        <div className="space-y-2" data-testid="top-posts">
+        <div className="space-y-1" data-testid="top-posts">
           {simulationState.rows.length > 0 ? (
             simulationState.rows
               .sort((a, b) => b.reward - a.reward)
               .slice(0, 10)
               .map((post, index) => (
-                <div key={`${post.round}-${post.user_id}`} className="bg-muted/20 border border-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={`${post.round}-${post.user_id}`} className="bg-muted/20 border border-border rounded-lg p-2">
+                  <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-primary">#{index + 1}</span>
-                      <span className="text-xs text-muted-foreground">
-                        Round {post.round} • User #{post.user_id} ({post.user_type})
+                      <span className="font-bold text-primary">#{index + 1}</span>
+                      <span className="text-muted-foreground">
+                        R{post.round} • U#{post.user_id} ({post.user_type})
                       </span>
                       {post.vibe_on && (
                         <Badge variant="outline" className="text-xs bg-primary/20 text-primary px-1 py-0">
@@ -574,58 +574,29 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                         </Badge>
                       )}
                     </div>
-                    <span className="text-sm font-bold text-primary" data-testid={`top-post-${index}-reward`}>
+                    <span className="font-bold text-primary" data-testid={`top-post-${index}-reward`}>
                       {post.reward.toFixed(1)}
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-6 gap-2 text-xs mb-2">
-                    <div className="text-center">
-                      <div className="text-muted-foreground">Humor</div>
-                      <div className="font-medium" data-testid={`top-post-${index}-humor`}>
-                        {post.humor.toFixed(2)}
-                      </div>
+                  <div className="flex items-center justify-between text-xs mt-1">
+                    <div className="flex gap-3">
+                      <span>H:{post.humor.toFixed(2)}</span>
+                      <span>I:{post.insight.toFixed(2)}</span>
+                      <span>B:{post.bait.toFixed(2)}</span>
+                      <span>C:{post.controversy.toFixed(2)}</span>
+                      <span>N:{post.news.toFixed(2)}</span>
+                      <span>D:{post.dunk.toFixed(2)}</span>
                     </div>
-                    <div className="text-center">
-                      <div className="text-muted-foreground">Insight</div>
-                      <div className="font-medium" data-testid={`top-post-${index}-insight`}>
-                        {post.insight.toFixed(2)}
-                      </div>
+                    <div className="flex gap-2 text-muted-foreground">
+                      <span>💚{post.strong_agree}</span>
+                      <span>👍{post.agree}</span>
+                      <span>🤔{post.not_sure}</span>
+                      <span>👎{post.disagree}</span>
+                      <span>💔{post.strong_disagree}</span>
+                      <span>💬{post.comments}</span>
+                      <span>🚩{post.bait_flags}</span>
                     </div>
-                    <div className="text-center">
-                      <div className="text-muted-foreground">Bait</div>
-                      <div className="font-medium" data-testid={`top-post-${index}-bait`}>
-                        {post.bait.toFixed(2)}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-muted-foreground">Control</div>
-                      <div className="font-medium" data-testid={`top-post-${index}-controversy`}>
-                        {post.controversy.toFixed(2)}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-muted-foreground">News</div>
-                      <div className="font-medium" data-testid={`top-post-${index}-news`}>
-                        {post.news.toFixed(2)}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-muted-foreground">Dunk</div>
-                      <div className="font-medium" data-testid={`top-post-${index}-dunk`}>
-                        {post.dunk.toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 text-xs text-muted-foreground">
-                    <span>💚 {post.strong_agree}</span>
-                    <span>👍 {post.agree}</span>
-                    <span>🤔 {post.not_sure}</span>
-                    <span>👎 {post.disagree}</span>
-                    <span>💔 {post.strong_disagree}</span>
-                    <span>💬 {post.comments}</span>
-                    <span>🚩 {post.bait_flags}</span>
                   </div>
                 </div>
               ))
