@@ -167,11 +167,11 @@ const TYPE_BIAS: Record<UserType, Record<Attribute, number>> = {
 };
 
 const VIBE_PROB: Record<UserType, number> = {
-  Normal: 0.1,
+  Normal: 0.06,
   Joker: 0.0,
   Troll: 0.0,
-  Intellectual: 0.1,
-  Journalist: 0.1,
+  Intellectual: 0.06,
+  Journalist: 0.06,
 };
 
 const TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
