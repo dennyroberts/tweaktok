@@ -562,7 +562,7 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
               .slice(0, 10)
               .map((post, index) => (
                 <div key={`${post.round}-${post.user_id}`} className="bg-muted/20 border border-border rounded-lg p-2">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-primary">#{index + 1}</span>
                       <span className="text-muted-foreground">
@@ -579,16 +579,46 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                     </span>
                   </div>
                   
-                  <div className="flex items-center justify-between text-xs mt-1">
-                    <div className="flex gap-3">
-                      <span>H:{post.humor.toFixed(2)}</span>
-                      <span>I:{post.insight.toFixed(2)}</span>
-                      <span>B:{post.bait.toFixed(2)}</span>
-                      <span>C:{post.controversy.toFixed(2)}</span>
-                      <span>N:{post.news.toFixed(2)}</span>
-                      <span>D:{post.dunk.toFixed(2)}</span>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <div className="flex gap-3 flex-wrap">
+                      <span 
+                        className="px-2 py-1 rounded text-black font-medium"
+                        style={{ backgroundColor: `rgb(${255 - Math.round(post.humor * 255)}, 255, ${255 - Math.round(post.humor * 255)})` }}
+                      >
+                        😹 HUM: {post.humor.toFixed(2)}
+                      </span>
+                      <span 
+                        className="px-2 py-1 rounded text-black font-medium"
+                        style={{ backgroundColor: `rgb(${255 - Math.round(post.insight * 255)}, 255, ${255 - Math.round(post.insight * 255)})` }}
+                      >
+                        🧠 INS: {post.insight.toFixed(2)}
+                      </span>
+                      <span 
+                        className="px-2 py-1 rounded text-black font-medium"
+                        style={{ backgroundColor: `rgb(${255 - Math.round(post.bait * 255)}, 255, ${255 - Math.round(post.bait * 255)})` }}
+                      >
+                        🎣 BAIT: {post.bait.toFixed(2)}
+                      </span>
+                      <span 
+                        className="px-2 py-1 rounded text-black font-medium"
+                        style={{ backgroundColor: `rgb(${255 - Math.round(post.controversy * 255)}, 255, ${255 - Math.round(post.controversy * 255)})` }}
+                      >
+                        🔥 CONT: {post.controversy.toFixed(2)}
+                      </span>
+                      <span 
+                        className="px-2 py-1 rounded text-black font-medium"
+                        style={{ backgroundColor: `rgb(${255 - Math.round(post.news * 255)}, 255, ${255 - Math.round(post.news * 255)})` }}
+                      >
+                        📰 NEWS: {post.news.toFixed(2)}
+                      </span>
+                      <span 
+                        className="px-2 py-1 rounded text-black font-medium"
+                        style={{ backgroundColor: `rgb(${255 - Math.round(post.dunk * 255)}, 255, ${255 - Math.round(post.dunk * 255)})` }}
+                      >
+                        💥 DUNK: {post.dunk.toFixed(2)}
+                      </span>
                     </div>
-                    <div className="flex gap-2 text-muted-foreground">
+                    <div className="flex gap-2 text-muted-foreground text-sm">
                       <span>💚{post.strong_agree}</span>
                       <span>👍{post.agree}</span>
                       <span>🤔{post.not_sure}</span>
