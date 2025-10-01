@@ -42,7 +42,7 @@ const StableInput = memo(function StableInput({
 }) {
   // Use a stable ref to maintain the same input element
   const inputRef = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState(value?.toString() ?? '');
+  const [text, setText] = useState(value !== undefined ? value.toString() : '');
   const [isFocused, setIsFocused] = useState(false);
 
   // Helper functions
@@ -65,13 +65,16 @@ const StableInput = memo(function StableInput({
   }, []);
 
   const format = useCallback((n: number) => {
-    return n.toString();
+    return n !== undefined ? n.toString() : '';
   }, []);
 
   // Only sync from external value when not focused
   useEffect(() => {
-    if (!isFocused && value !== undefined && format(value) !== text) {
-      setText(format(value));
+    if (!isFocused && value !== undefined) {
+      const formattedValue = format(value);
+      if (formattedValue !== text) {
+        setText(formattedValue);
+      }
     }
   }, [value, text, isFocused, format]);
 
@@ -205,66 +208,72 @@ export default function SimulationControls({
   isRunning,
   canExtend
 }: SimulationControlsProps) {
+  // Store the initial config values when component first mounts
+  const initialConfigRef = useRef<SimulationConfig | null>(null);
+  if (initialConfigRef.current === null) {
+    initialConfigRef.current = { ...config };
+  }
+
   // Local state for all form values - no immediate updates
   const [localConfig, setLocalConfig] = useState(config);
   const { toast } = useToast();
 
-  // Default values for each section
+  // Default values for each section - use the actual initial config values
   const defaultBasicSettings = {
-    usersN: 50,
-    rounds: 50,
-    learnRate: 0.1,
-    baitRatioThresh: 0.3,
-    baitPenaltyMult: 0.2,
-    reachMin: 30,
-    reachMax: 150
+    usersN: initialConfigRef.current.usersN,
+    rounds: initialConfigRef.current.rounds,
+    learnRate: initialConfigRef.current.learnRate,
+    baitRatioThresh: initialConfigRef.current.baitRatioThresh,
+    baitPenaltyMult: initialConfigRef.current.baitPenaltyMult,
+    reachMin: initialConfigRef.current.reachMin,
+    reachMax: initialConfigRef.current.reachMax
   };
 
   const defaultVibeSettings = {
-    vibeFlagMult: 0.6,
-    polarCoupling: 0.12,
-    vibeHumorPenalty: 0.15,
-    vibeControversyPenalty: 0.25,
-    vibeInsightBoost: 0.20,
-    vibeCommentBoost: 0.20
+    vibeFlagMult: initialConfigRef.current.vibeFlagMult,
+    polarCoupling: initialConfigRef.current.polarCoupling,
+    vibeHumorPenalty: initialConfigRef.current.vibeHumorPenalty,
+    vibeControversyPenalty: initialConfigRef.current.vibeControversyPenalty,
+    vibeInsightBoost: initialConfigRef.current.vibeInsightBoost,
+    vibeCommentBoost: initialConfigRef.current.vibeCommentBoost
   };
 
   const defaultNetworkSettings = {
-    followersMean: 100,
-    followerReachFactor: 0.1,
-    echoChamberStrength: 0,
-    followGainThresh: 1.2,
-    followGainRate: 0.25,
-    followLossRate: 1.0,
-    viralityThreshold: 1500,
-    localFloor: 0.20,
-    vibeReachBoost: 0.15,
-    maWindow: 10
+    followersMean: initialConfigRef.current.followersMean,
+    followerReachFactor: initialConfigRef.current.followerReachFactor,
+    echoChamberStrength: initialConfigRef.current.echoChamberStrength,
+    followGainThresh: initialConfigRef.current.followGainThresh,
+    followGainRate: initialConfigRef.current.followGainRate,
+    followLossRate: initialConfigRef.current.followLossRate,
+    viralityThreshold: initialConfigRef.current.viralityThreshold,
+    localFloor: initialConfigRef.current.localFloor,
+    vibeReachBoost: initialConfigRef.current.vibeReachBoost,
+    maWindow: initialConfigRef.current.maWindow
   };
 
   const defaultTypeUtilities = {
-    Normal: { SA: 1.4, A: 1.1, NS: -0.3, D: -0.5, SD: -1.0 },
-    Joker: { SA: 1.2, A: 1.1, NS: -0.2, D: -0.4, SD: -1.0 },
-    Intellectual: { SA: 0.9, A: 1.0, NS: 0.6, D: 0.6, SD: -0.7 },
-    Journalist: { SA: 0.8, A: 1.0, NS: 0.7, D: 0.7, SD: -0.7 },
-    Troll: { SA: 1.1, A: 0.5, NS: -0.8, D: -0.6, SD: 1.2 }
+    Normal: { ...initialConfigRef.current.typeUtilities.Normal },
+    Joker: { ...initialConfigRef.current.typeUtilities.Joker },
+    Intellectual: { ...initialConfigRef.current.typeUtilities.Intellectual },
+    Journalist: { ...initialConfigRef.current.typeUtilities.Journalist },
+    Troll: { ...initialConfigRef.current.typeUtilities.Troll }
   };
 
   const defaultUserMix = {
-    Normal: 25,
-    Joker: 25,
-    Troll: 25,
-    Intellectual: 25,
-    Journalist: 25
+    Normal: initialConfigRef.current.mix.Normal,
+    Joker: initialConfigRef.current.mix.Joker,
+    Troll: initialConfigRef.current.mix.Troll,
+    Intellectual: initialConfigRef.current.mix.Intellectual,
+    Journalist: initialConfigRef.current.mix.Journalist
   };
 
   const defaultBoosts = {
-    humor: 0,
-    insight: 0,
-    bait: 0,
-    controversy: 0,
-    news: 0,
-    dunk: 0
+    humor: initialConfigRef.current.boosts.humor,
+    insight: initialConfigRef.current.boosts.insight,
+    bait: initialConfigRef.current.boosts.bait,
+    controversy: initialConfigRef.current.boosts.controversy,
+    news: initialConfigRef.current.boosts.news,
+    dunk: initialConfigRef.current.boosts.dunk
   };
 
   // Reset functions for each section
