@@ -42,7 +42,7 @@ const StableInput = memo(function StableInput({
 }) {
   // Use a stable ref to maintain the same input element
   const inputRef = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState(value.toString());
+  const [text, setText] = useState(value?.toString() ?? '');
   const [isFocused, setIsFocused] = useState(false);
 
   // Helper functions
@@ -70,7 +70,7 @@ const StableInput = memo(function StableInput({
 
   // Only sync from external value when not focused
   useEffect(() => {
-    if (!isFocused && format(value) !== text) {
+    if (!isFocused && value !== undefined && format(value) !== text) {
       setText(format(value));
     }
   }, [value, text, isFocused, format]);
@@ -208,6 +208,107 @@ export default function SimulationControls({
   // Local state for all form values - no immediate updates
   const [localConfig, setLocalConfig] = useState(config);
   const { toast } = useToast();
+
+  // Default values for each section
+  const defaultBasicSettings = {
+    usersN: 50,
+    rounds: 50,
+    learnRate: 0.1,
+    baitRatioThresh: 0.3,
+    baitPenaltyMult: 0.2,
+    reachMin: 30,
+    reachMax: 150
+  };
+
+  const defaultVibeSettings = {
+    vibeFlagMult: 0.6,
+    polarCoupling: 0.12,
+    vibeHumorPenalty: 0.15,
+    vibeControversyPenalty: 0.25,
+    vibeInsightBoost: 0.20,
+    vibeCommentBoost: 0.20
+  };
+
+  const defaultNetworkSettings = {
+    followersMean: 100,
+    followerReachFactor: 0.1,
+    echoChamberStrength: 0,
+    followGainThresh: 1.2,
+    followGainRate: 0.25,
+    followLossRate: 1.0,
+    viralityThreshold: 1500,
+    localFloor: 0.20,
+    vibeReachBoost: 0.15,
+    maWindow: 10
+  };
+
+  const defaultTypeUtilities = {
+    Normal: { SA: 1.4, A: 1.1, NS: -0.3, D: -0.5, SD: -1.0 },
+    Joker: { SA: 1.2, A: 1.1, NS: -0.2, D: -0.4, SD: -1.0 },
+    Intellectual: { SA: 0.9, A: 1.0, NS: 0.6, D: 0.6, SD: -0.7 },
+    Journalist: { SA: 0.8, A: 1.0, NS: 0.7, D: 0.7, SD: -0.7 },
+    Troll: { SA: 1.1, A: 0.5, NS: -0.8, D: -0.6, SD: 1.2 }
+  };
+
+  const defaultUserMix = {
+    Normal: 25,
+    Joker: 25,
+    Troll: 25,
+    Intellectual: 25,
+    Journalist: 25
+  };
+
+  const defaultBoosts = {
+    humor: 0,
+    insight: 0,
+    bait: 0,
+    controversy: 0,
+    news: 0,
+    dunk: 0
+  };
+
+  // Reset functions for each section
+  const resetBasicSettings = useCallback(() => {
+    setLocalConfig(prev => ({
+      ...prev,
+      ...defaultBasicSettings
+    }));
+  }, []);
+
+  const resetVibeSettings = useCallback(() => {
+    setLocalConfig(prev => ({
+      ...prev,
+      ...defaultVibeSettings
+    }));
+  }, []);
+
+  const resetNetworkSettings = useCallback(() => {
+    setLocalConfig(prev => ({
+      ...prev,
+      ...defaultNetworkSettings
+    }));
+  }, []);
+
+  const resetTypeUtilities = useCallback(() => {
+    setLocalConfig(prev => ({
+      ...prev,
+      typeUtilities: defaultTypeUtilities
+    }));
+  }, []);
+
+  const resetUserMix = useCallback(() => {
+    setLocalConfig(prev => ({
+      ...prev,
+      mix: defaultUserMix
+    }));
+  }, []);
+
+  const resetBoosts = useCallback(() => {
+    setLocalConfig(prev => ({
+      ...prev,
+      boosts: defaultBoosts
+    }));
+  }, []);
 
   // Update local config when parent config changes (like on simulation start)
   useEffect(() => {
@@ -376,9 +477,19 @@ export default function SimulationControls({
 
         {/* Main Simulation Controls */}
         <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-base font-semibold text-accent">🛠️ Simulation Controls</h2>
-            <Badge variant="outline" className="text-xs">hover ℹ️ for details</Badge>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold text-accent">🛠️ Simulation Controls</h2>
+              <Badge variant="outline" className="text-xs">hover ℹ️ for details</Badge>
+            </div>
+            <Button
+              onClick={resetBasicSettings}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              🔄 Reset
+            </Button>
           </div>
 
         <div className="space-y-4">
@@ -488,9 +599,19 @@ export default function SimulationControls({
 
       {/* Vibe Effects */}
       <Card className="p-6">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-accent">🏷️ Vibe Effects</h3>
-          <p className="text-xs text-muted-foreground mt-1">How "vibe" tags affect post content and engagement when users mark posts as earnest discussion.</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🏷️ Vibe Effects</h3>
+            <p className="text-xs text-muted-foreground mt-1">How "vibe" tags affect post content and engagement when users mark posts as earnest discussion.</p>
+          </div>
+          <Button
+            onClick={resetVibeSettings}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            🔄 Reset
+          </Button>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -546,11 +667,21 @@ export default function SimulationControls({
       {/* Network & Homophily */}
       <Card className="p-6">
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-medium text-foreground">🌐 Network & Echo Chamber</h3>
-            <span className="text-xs text-muted-foreground">
-              Controls follower counts and how much users see agreeable vs disagreeable content.
-            </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-medium text-foreground">🌐 Network & Echo Chamber</h3>
+              <span className="text-xs text-muted-foreground">
+                Controls follower counts and how much users see agreeable vs disagreeable content.
+              </span>
+            </div>
+            <Button
+              onClick={resetNetworkSettings}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              🔄 Reset
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -592,9 +723,19 @@ export default function SimulationControls({
 
       {/* Type Utilities */}
       <Card className="p-6">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-accent">🎯 User Type Reaction Utilities</h3>
-          <p className="text-xs text-muted-foreground mt-1">How each user type feels about different reactions. Positive = seeks that reaction, negative = avoids it.</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🎯 User Type Reaction Utilities</h3>
+            <p className="text-xs text-muted-foreground mt-1">How each user type feels about different reactions. Positive = seeks that reaction, negative = avoids it.</p>
+          </div>
+          <Button
+            onClick={resetTypeUtilities}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            🔄 Reset
+          </Button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -677,9 +818,19 @@ export default function SimulationControls({
 
       {/* User Type Mix */}
       <Card className="p-6">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-accent">🧬 User Type Mix (%)</h3>
-          <p className="text-xs text-muted-foreground mt-1">What percentage of users are each archetype—Normal (balanced), Joker (humor-focused), Troll (controversy-seeking), Intellectual (insight-driven), Journalist (news-oriented).</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🧬 User Type Mix (%)</h3>
+            <p className="text-xs text-muted-foreground mt-1">What percentage of users are each archetype—Normal (balanced), Joker (humor-focused), Troll (controversy-seeking), Intellectual (insight-driven), Journalist (news-oriented).</p>
+          </div>
+          <Button
+            onClick={resetUserMix}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            🔄 Reset
+          </Button>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -746,9 +897,19 @@ export default function SimulationControls({
 
       {/* Post Attribute Boosts */}
       <Card className="p-6">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-accent">🧪 Post Attribute Boosts (−1 to +1)</h3>
-          <p className="text-xs text-muted-foreground mt-1">Platform-wide modifiers that reward or punish specific types of content—positive values boost engagement for that content type.</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-accent">🧪 Post Attribute Boosts (−1 to +1)</h3>
+            <p className="text-xs text-muted-foreground mt-1">Platform-wide modifiers that reward or punish specific types of content—positive values boost engagement for that content type.</p>
+          </div>
+          <Button
+            onClick={resetBoosts}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            🔄 Reset
+          </Button>
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
