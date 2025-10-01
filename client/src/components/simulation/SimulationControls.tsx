@@ -219,13 +219,31 @@ export default function SimulationControls({
   }, []);
 
   const updateLocalNestedConfig = useCallback((parent: string, key: string, value: number) => {
-    setLocalConfig(prev => ({
-      ...prev,
-      [parent]: {
-        ...(prev[parent as keyof SimulationConfig] as any),
-        [key]: value
+    setLocalConfig(prev => {
+      if (key.includes('.')) {
+        // Handle nested paths like "Normal.SA"
+        const [userType, reaction] = key.split('.');
+        return {
+          ...prev,
+          [parent]: {
+            ...(prev[parent as keyof SimulationConfig] as any),
+            [userType]: {
+              ...(prev[parent as keyof SimulationConfig] as any)[userType],
+              [reaction]: value
+            }
+          }
+        };
+      } else {
+        // Handle simple paths
+        return {
+          ...prev,
+          [parent]: {
+            ...(prev[parent as keyof SimulationConfig] as any),
+            [key]: value
+          }
+        };
       }
-    }));
+    });
   }, []);
 
   // Wrapper functions that auto-apply changes before running simulations
@@ -572,71 +590,88 @@ export default function SimulationControls({
         </div>
       </Card>
 
-      {/* Reaction Weights */}
+      {/* Type Utilities */}
       <Card className="p-6">
         <div className="mb-4">
-          <h3 className="text-sm font-semibold text-accent">🎯 Reaction Weights (base blend)</h3>
-          <p className="text-xs text-muted-foreground mt-1">How rewarding different reaction types feel to users—positive values make users seek that reaction type, negative values make them avoid it.</p>
+          <h3 className="text-sm font-semibold text-accent">🎯 User Type Reaction Utilities</h3>
+          <p className="text-xs text-muted-foreground mt-1">How each user type feels about different reactions. Positive = seeks that reaction, negative = avoids it.</p>
         </div>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <StableInput
-              label="Strong Agree 💚"
-              tooltip="Think of this as how good it feels when people really love your post and strongly agree with you. In real life, some people chase validation and want lots of strong agreement, while others might find it boring or even suspicious when everyone agrees too strongly. Positive values = users love getting strong agreement and will post more content like that. Negative values = users get uncomfortable with too much agreement and will avoid posting things that get universal praise."
-              id="wSA"
-              value={localConfig.w.strong_agree}
-              onChange={(value) => updateLocalNestedConfig('w', 'strong_agree', value)}
-              min={-2}
-              max={3}
-              step={0.1}
-            />
-            <StableInput
-              label="Agree 👍"
-              tooltip="This is the basic 'thumbs up' or like reaction—moderate positive feedback. Most people find agreement somewhat rewarding, but you could model contrarians who actually dislike when people agree with them. Positive values = users enjoy getting agreement and will post more content that gets likes. Negative values = users are turned off by agreement (maybe they prefer to be controversial). Zero = users don't care much about basic agreement."
-              id="wA"
-              value={localConfig.w.agree}
-              onChange={(value) => updateLocalNestedConfig('w', 'agree', value)}
-              min={-2}
-              max={3}
-              step={0.1}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <StableInput
-              label="Not Sure 🤔"
-              tooltip="This represents when people respond with uncertainty, confusion, or 'I'm not sure' to your post. Some content creators value making people think deeply (even if they're unsure), while others want clear, decisive reactions. Positive values = users enjoy posting thought-provoking content that makes people uncertain or reflective. Negative values = users prefer posts that get clear, definitive reactions rather than confusion. Zero = users don't care about uncertain responses."
-              id="wNS"
-              value={localConfig.w.not_sure}
-              onChange={(value) => updateLocalNestedConfig('w', 'not_sure', value)}
-              min={-2}
-              max={3}
-              step={0.1}
-            />
-            <StableInput
-              label="Disagree 👎"
-              tooltip="The basic 'thumbs down' or disagree reaction. Most people don't like being disagreed with, but some personalities (like trolls or devils advocates) actually enjoy stirring up disagreement and debate. Positive values = users enjoy getting disagreement and will post more controversial content. Negative values = users dislike disagreement and will avoid posting things that get negative reactions. Zero = users are neutral about disagreement."
-              id="wD"
-              value={localConfig.w.disagree}
-              onChange={(value) => updateLocalNestedConfig('w', 'disagree', value)}
-              min={-2}
-              max={3}
-              step={0.1}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <StableInput
-              label="Strong Disagree 💔"
-              tooltip="This is when people really hate your post and strongly disagree with you. Most normal users want to avoid this kind of intense negative reaction, but trolls and controversy-seekers might actually be motivated by it. Negative values = users hate getting strong disagreement and will avoid posting content that gets them (normal behavior). Positive values = users are energized by strong negative reactions and will post more inflammatory content to get them (troll behavior)."
-              id="wSD"
-              value={localConfig.w.strong_disagree}
-              onChange={(value) => updateLocalNestedConfig('w', 'strong_disagree', value)}
-              min={-2}
-              max={3}
-              step={0.1}
-            />
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-2">Type</th>
+                <th className="text-center p-2">💚 SA</th>
+                <th className="text-center p-2">👍 A</th>
+                <th className="text-center p-2">🤔 NS</th>
+                <th className="text-center p-2">👎 D</th>
+                <th className="text-center p-2">💔 SD</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(['Normal', 'Joker', 'Troll', 'Intellectual', 'Journalist'] as const).map((userType) => (
+                <tr key={userType} className="border-b">
+                  <td className="p-2 font-medium">{userType}</td>
+                  <td className="p-1">
+                    <input
+                      type="number"
+                      min={-2}
+                      max={3}
+                      step={0.1}
+                      value={localConfig.typeUtilities[userType].SA}
+                      onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.SA`, parseFloat(e.target.value))}
+                      className="w-16 text-xs p-1 border rounded text-center"
+                    />
+                  </td>
+                  <td className="p-1">
+                    <input
+                      type="number"
+                      min={-2}
+                      max={3}
+                      step={0.1}
+                      value={localConfig.typeUtilities[userType].A}
+                      onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.A`, parseFloat(e.target.value))}
+                      className="w-16 text-xs p-1 border rounded text-center"
+                    />
+                  </td>
+                  <td className="p-1">
+                    <input
+                      type="number"
+                      min={-2}
+                      max={3}
+                      step={0.1}
+                      value={localConfig.typeUtilities[userType].NS}
+                      onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.NS`, parseFloat(e.target.value))}
+                      className="w-16 text-xs p-1 border rounded text-center"
+                    />
+                  </td>
+                  <td className="p-1">
+                    <input
+                      type="number"
+                      min={-2}
+                      max={3}
+                      step={0.1}
+                      value={localConfig.typeUtilities[userType].D}
+                      onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.D`, parseFloat(e.target.value))}
+                      className="w-16 text-xs p-1 border rounded text-center"
+                    />
+                  </td>
+                  <td className="p-1">
+                    <input
+                      type="number"
+                      min={-2}
+                      max={3}
+                      step={0.1}
+                      value={localConfig.typeUtilities[userType].SD}
+                      onChange={(e) => updateLocalNestedConfig('typeUtilities', `${userType}.SD`, parseFloat(e.target.value))}
+                      className="w-16 text-xs p-1 border rounded text-center"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-xs text-muted-foreground mt-2">SA=Strong Agree, A=Agree, NS=Not Sure, D=Disagree, SD=Strong Disagree</p>
         </div>
       </Card>
 

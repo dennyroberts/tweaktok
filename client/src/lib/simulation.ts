@@ -41,13 +41,13 @@ export interface SimulationConfig {
   localFloor: number;
   followGainRate: number;
   followLossRate: number;
-  w: {
-    strong_agree: number;
-    agree: number;
-    not_sure: number;
-    disagree: number;
-    strong_disagree: number;
-  };
+  typeUtilities: Record<UserType, {
+    SA: number;
+    A: number;
+    NS: number;
+    D: number;
+    SD: number;
+  }>;
   boosts: Record<Attribute, number>;
   mix: Record<UserType, number>;
   maWindow: number;
@@ -173,7 +173,7 @@ const VIBE_PROB: Record<UserType, number> = {
   Journalist: 0.06,
 };
 
-const TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
+let TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
   Normal: { SA: 1.4, A: 1.1, NS: -0.3, D: -0.5, SD: -1.0 },
   Joker: { SA: 1.2, A: 1.1, NS: -0.2, D: -0.4, SD: -1.0 },
   Intellectual: { SA: 0.9, A: 1.0, NS: 0.6, D: 0.6, SD: -0.7 },
@@ -392,22 +392,14 @@ export class SimulationEngine {
     counts: Record<string, number>,
     comments: number,
     user: User,
-    W: SimulationConfig["w"],
   ): number {
     const U = TYPE_REACT_UTILITY[user.type];
-    const wrBase =
-      W.strong_agree * counts.strong_agree +
-      W.agree * counts.agree +
-      W.not_sure * counts.not_sure +
-      W.disagree * counts.disagree +
-      W.strong_disagree * counts.strong_disagree;
-    const wrType =
+    const wr =
       U.SA * counts.strong_agree +
       U.A * counts.agree +
       U.NS * counts.not_sure +
       U.D * counts.disagree +
       U.SD * counts.strong_disagree;
-    const wr = 0.5 * wrBase + 0.5 * wrType;
     return user.wReact * wr + (1 - user.wReact) * comments;
   }
 
@@ -498,6 +490,10 @@ export class SimulationEngine {
 
   startSimulation(cfg: SimulationConfig): SimulationState {
     this.lastConfig = { ...cfg }; // Store the config for later use
+    
+    // Update TYPE_REACT_UTILITY with config values
+    TYPE_REACT_UTILITY = { ...cfg.typeUtilities };
+    
     this.state.users = this.buildUsers(
       cfg.usersN,
       cfg.mix,
@@ -677,7 +673,7 @@ export class SimulationEngine {
           if (Math.random() < commentP) comments++;
         }
 
-        const reward = this.engagementScore(counts, comments, u, cfg.w);
+        const reward = this.engagementScore(counts, comments, u);
         this.state.ref = 0.98 * this.state.ref + 0.02 * Math.max(1, reward);
         this.learn(u, attrs, vibeOn, reward, this.state.ref);
         this.followerUpdate(

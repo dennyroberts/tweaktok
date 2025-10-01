@@ -45,12 +45,12 @@ export default function Simulation() {
     localFloor: 0.20,
     followGainRate: 0.25,
     followLossRate: 0.30,
-    w: {
-      strong_agree: 1.0,
-      agree: 0.8,
-      not_sure: 0.2,
-      disagree: 0.0,
-      strong_disagree: -0.6
+    typeUtilities: {
+      Normal: { SA: 1.4, A: 1.1, NS: -0.3, D: -0.5, SD: -1.0 },
+      Joker: { SA: 1.2, A: 1.1, NS: -0.2, D: -0.4, SD: -1.0 },
+      Intellectual: { SA: 0.9, A: 1.0, NS: 0.6, D: 0.6, SD: -0.7 },
+      Journalist: { SA: 0.8, A: 1.0, NS: 0.7, D: 0.7, SD: -0.7 },
+      Troll: { SA: 1.1, A: 0.5, NS: -0.8, D: -0.6, SD: 1.2 },
     },
     boosts: {
       humor: 0.00,
