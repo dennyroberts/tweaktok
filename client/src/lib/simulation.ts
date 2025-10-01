@@ -447,7 +447,7 @@ export class SimulationEngine {
     const cleared = reward > cfg.followGainThresh * ref;
     const gain = cleared
       ? cfg.followGainRate *
-        (0.8 * counts.strong_agree + 0.4 * counts.agree + 0.8 * comments)
+        (0.8 * counts.strong_agree + 0.6 * counts.agree + 0.4 * comments) // liking something more indicative of intent to follow than commenting, which could be you arguing with someone
       : 0;
     const loss =
       cfg.followLossRate * Math.max(0, baitRatio - cfg.baitRatioThresh) * 20;
