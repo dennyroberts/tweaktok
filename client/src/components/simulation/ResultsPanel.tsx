@@ -444,21 +444,98 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
       <Card className="p-6">
         <h3 className="text-sm font-medium text-accent mb-4">🏷️ Vibe Usage Over Time</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-sm text-foreground mb-2">Overall</h4>
-            <canvas 
-              id="chartVibeOverall" 
-              className="w-full h-40"
-              data-testid="chart-vibe-overall"
-            ></canvas>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h4 className="text-sm text-foreground mb-2">Overall</h4>
+              <canvas 
+                id="chartVibeOverall" 
+                className="w-full h-40"
+                data-testid="chart-vibe-overall"
+              ></canvas>
+            </div>
+            {simulationState.seriesVibeOverall.length > 0 && (
+              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+                <div className="text-xs font-medium text-muted-foreground mb-3">Overall Vibe Usage Changes</div>
+                <div className="space-y-2 text-xs">
+                  {(() => {
+                    const start = simulationState.seriesVibeOverall[0] || 0;
+                    
+                    // Calculate average of last 10 values instead of just the last value
+                    const last10 = simulationState.seriesVibeOverall.slice(-10);
+                    const current = last10.length > 0 
+                      ? last10.reduce((sum, value) => sum + value, 0) / last10.length
+                      : 0;
+
+                    const change = current - start;
+                    const changePercent = start > 0 ? ((change / start) * 100) : 0;
+
+                    return (
+                      <div className="py-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Overall:</span>
+                          <div className="text-right">
+                            <div className="text-foreground">
+                              {(start * 100).toFixed(1)}% → {(current * 100).toFixed(1)}%
+                            </div>
+                            <div className={`text-xs ${change >= 0 ? 'text-sim-green' : 'text-sim-red'}`}>
+                              {change >= 0 ? '+' : ''}{(change * 100).toFixed(1)}% ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(1)}%)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <h4 className="text-sm text-foreground mb-2">By Type</h4>
-            <canvas 
-              id="chartVibeByType" 
-              className="w-full h-40"
-              data-testid="chart-vibe-by-type"
-            ></canvas>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h4 className="text-sm text-foreground mb-2">By Type</h4>
+              <canvas 
+                id="chartVibeByType" 
+                className="w-full h-40"
+                data-testid="chart-vibe-by-type"
+              ></canvas>
+            </div>
+            {simulationState.seriesVibeByType && Object.keys(simulationState.seriesVibeByType).length > 0 && (
+              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+                <div className="text-xs font-medium text-muted-foreground mb-3">Vibe Usage by Type</div>
+                <div className="space-y-2 text-xs">
+                  {USER_TYPES.map(type => {
+                    const typeData = simulationState.seriesVibeByType[type] || [];
+                    if (typeData.length === 0) return null;
+
+                    const start = typeData[0] || 0;
+
+                    // Calculate average of last 10 values instead of just the last value
+                    const last10 = typeData.slice(-10);
+                    const current = last10.length > 0 
+                      ? last10.reduce((sum, value) => sum + value, 0) / last10.length
+                      : 0;
+
+                    const change = current - start;
+                    const changePercent = start > 0 ? ((change / start) * 100) : 0;
+
+                    return (
+                      <div key={type} className="py-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">{type}:</span>
+                          <div className="text-right">
+                            <div className="text-foreground">
+                              {(start * 100).toFixed(1)}% → {(current * 100).toFixed(1)}%
+                            </div>
+                            <div className={`text-xs ${change >= 0 ? 'text-sim-green' : 'text-sim-red'}`}>
+                              {change >= 0 ? '+' : ''}{(change * 100).toFixed(1)}% ({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(1)}%)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>
