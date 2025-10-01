@@ -41,13 +41,16 @@ export interface SimulationConfig {
   localFloor: number;
   followGainRate: number;
   followLossRate: number;
-  typeUtilities: Record<UserType, {
-    SA: number;
-    A: number;
-    NS: number;
-    D: number;
-    SD: number;
-  }>;
+  typeUtilities: Record<
+    UserType,
+    {
+      SA: number;
+      A: number;
+      NS: number;
+      D: number;
+      SD: number;
+    }
+  >;
   boosts: Record<Attribute, number>;
   mix: Record<UserType, number>;
   maWindow: number;
@@ -144,33 +147,33 @@ const TYPE_BIAS: Record<UserType, Record<Attribute, number>> = {
     insight: 0.1,
     bait: 0.8,
     controversy: 0.8,
-    news: 0.1,
+    news: 0.2,
     dunk: 0.6,
   },
   Intellectual: {
     humor: 0.2,
     insight: 0.8,
-    bait: 0.1,
+    bait: 0.2,
     controversy: 0.2,
     news: 0.6,
-    dunk: 0.1,
+    dunk: 0.2,
   },
   Journalist: {
     humor: 0.2,
     insight: 0.6,
-    bait: 0.1,
+    bait: 0.2,
     controversy: 0.3,
     news: 0.9,
-    dunk: 0.1,
+    dunk: 0.2,
   },
 };
 
 const VIBE_PROB: Record<UserType, number> = {
-  Normal: 0.06,
+  Normal: 0.1,
   Joker: 0.0,
   Troll: 0.0,
-  Intellectual: 0.06,
-  Journalist: 0.06,
+  Intellectual: 0.1,
+  Journalist: 0.1,
 };
 
 let TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
@@ -178,7 +181,7 @@ let TYPE_REACT_UTILITY: Record<UserType, Record<string, number>> = {
   Joker: { SA: 1.2, A: 1.1, NS: -0.2, D: -0.4, SD: -1.0 },
   Intellectual: { SA: 0.9, A: 1.0, NS: 0.6, D: 0.6, SD: -0.7 },
   Journalist: { SA: 0.8, A: 1.0, NS: 0.7, D: 0.7, SD: -0.7 },
-  Troll: { SA: 1.1, A: 0.5, NS: -0.8, D: -0.6, SD: 1.2 },
+  Troll: { SA: 1.1, A: 0.5, NS: -1.0, D: -0.6, SD: 1.2 },
 };
 
 export class SimulationEngine {
@@ -249,12 +252,12 @@ export class SimulationEngine {
 
     // Combined positive score with proper weighting: humor & bait strongest, then insight, news, controversy, dunk
     const positive =
-      0.8 * eff.humor + // Strongest - humor drives engagement
-      0.8 * eff.bait + // Strongest - bait tactics work
+      0.7 * eff.humor + // Strongest - humor drives engagement
+      0.7 * eff.bait + // Strongest - bait tactics work
       0.5 * eff.insight + // Good but not as viral
-      0.4 * eff.news + // News value helps
+      0.5 * eff.news + // News value helps
       0.6 * eff.controversy + // Controversy drives engagement but less than humor/bait
-      0.3 * eff.dunk; // Weakest - dunking is niche
+      0.4 * eff.dunk; // Weakest - dunking is niche
 
     // Much stronger multiplier range for bigger differences between good/bad posts
     let reach = base * (0.3 + 2.0 * positive); // Changed from 0.6 + 1.0 to 0.3 + 2.0 for 5x range
@@ -300,12 +303,12 @@ export class SimulationEngine {
 
   private applyEchoChamber(probs: Record<string, number>, strength: number) {
     const out = { ...probs };
-    
+
     // strength ranges from -1 to +1
     // +1 = only see agreeable content (echo chamber)
     // -1 = only see disagreeable content (reverse echo chamber)
     // 0 = normal mix
-    
+
     if (strength > 0) {
       // Echo chamber: boost agrees, reduce disagrees
       out.strong_agree *= 1 + strength; // 2x at max
@@ -345,13 +348,13 @@ export class SimulationEngine {
   ): number {
     let p = 0.1 * eff.bait + 0.08 * eff.controversy + 0.06 * eff.dunk;
     if (vibeOn) p *= flagMult;
-    
+
     // Echo chamber effect on bait flagging
-    // When echoChamberStrength is negative (disagreeable audience), 
+    // When echoChamberStrength is negative (disagreeable audience),
     // they're more likely to flag as bait
     // When positive (agreeable audience), less likely to flag as bait
     p *= 1 - 0.3 * echoChamberStrength;
-    
+
     return clamp01(0.01 + p);
   }
 
@@ -360,7 +363,7 @@ export class SimulationEngine {
     vibeOn: boolean,
     boost: number,
   ): number {
-    const hi = 0.4 * eff.controversy + 0.35 * eff.bait + 0.3 * eff.dunk;
+    const hi = 0.5 * eff.controversy + 0.35 * eff.bait + 0.3 * eff.dunk;
     const med = (0.18 * (eff.humor + eff.insight + eff.news)) / 3;
     let p = clamp01(0.03 + hi + med);
     if (vibeOn) p = clamp01(p * (1 + boost));
@@ -474,9 +477,7 @@ export class SimulationEngine {
         id: i,
         type: t,
         strategy: strat,
-        vibeStrategy: Math.max(0.02, clamp01(
-          VIBE_PROB[t] + randNorm(0, 0.06),
-        )),
+        vibeStrategy: Math.max(0.02, clamp01(VIBE_PROB[t] + randNorm(0, 0.06))),
         wReact: clamp01(0.5 + Math.random() * 0.4),
         learnRate,
         followers: Math.max(
@@ -490,10 +491,10 @@ export class SimulationEngine {
 
   startSimulation(cfg: SimulationConfig): SimulationState {
     this.lastConfig = { ...cfg }; // Store the config for later use
-    
+
     // Update TYPE_REACT_UTILITY with config values
     TYPE_REACT_UTILITY = { ...cfg.typeUtilities };
-    
+
     this.state.users = this.buildUsers(
       cfg.usersN,
       cfg.mix,
@@ -610,7 +611,12 @@ export class SimulationEngine {
           cfg.vibeReachBoost,
         );
         let probsBase = this.reactionProbs(eff);
-        let baitP = this.baitFlagProb(eff, vibeOn, cfg.vibeFlagMult, cfg.echoChamberStrength);
+        let baitP = this.baitFlagProb(
+          eff,
+          vibeOn,
+          cfg.vibeFlagMult,
+          cfg.echoChamberStrength,
+        );
         let commentP = this.commentProb(eff, vibeOn, cfg.vibeCommentBoost);
 
         const counts = {
