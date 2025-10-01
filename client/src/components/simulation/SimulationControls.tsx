@@ -521,18 +521,7 @@ export default function SimulationControls({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            <StableInput
-              label="Base Vibe Probability 🎯"
-              tooltip="Starting probability for Normal users to use vibe tags. They'll learn from here. 0.05 = 5% chance initially. Higher values = users start using vibe tags more often. Lower values = users rarely use vibe tags initially (must learn through experience)."
-              id="baseVibeProb"
-              value={localConfig.baseVibeProb}
-              onChange={(value) => updateLocalConfig('baseVibeProb', value)}
-              min={0}
-              max={1}
-              step={0.01}
-            />
-          </div>
+          
         </div>
       </Card>
 
