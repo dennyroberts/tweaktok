@@ -582,38 +582,62 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                   <div className="flex items-center justify-between text-sm mt-1">
                     <div className="flex gap-3 flex-wrap">
                       <span 
-                        className="px-2 py-1 rounded text-black font-medium"
-                        style={{ backgroundColor: `rgb(${255 - Math.round(post.humor * 255)}, 255, ${255 - Math.round(post.humor * 255)})` }}
+                        className="font-medium"
+                        style={{ 
+                          color: post.humor < 0.5 
+                            ? `rgb(${255}, ${Math.round(255 * post.humor * 2)}, ${Math.round(255 * post.humor * 2)})` 
+                            : `rgb(${Math.round(255 * (2 - post.humor * 2))}, 255, ${Math.round(255 * (2 - post.humor * 2))})` 
+                        }}
                       >
                         😹 HUM: {post.humor.toFixed(2)}
                       </span>
                       <span 
-                        className="px-2 py-1 rounded text-black font-medium"
-                        style={{ backgroundColor: `rgb(${255 - Math.round(post.insight * 255)}, 255, ${255 - Math.round(post.insight * 255)})` }}
+                        className="font-medium"
+                        style={{ 
+                          color: post.insight < 0.5 
+                            ? `rgb(${255}, ${Math.round(255 * post.insight * 2)}, ${Math.round(255 * post.insight * 2)})` 
+                            : `rgb(${Math.round(255 * (2 - post.insight * 2))}, 255, ${Math.round(255 * (2 - post.insight * 2))})` 
+                        }}
                       >
                         🧠 INS: {post.insight.toFixed(2)}
                       </span>
                       <span 
-                        className="px-2 py-1 rounded text-black font-medium"
-                        style={{ backgroundColor: `rgb(${255 - Math.round(post.bait * 255)}, 255, ${255 - Math.round(post.bait * 255)})` }}
+                        className="font-medium"
+                        style={{ 
+                          color: post.bait < 0.5 
+                            ? `rgb(${255}, ${Math.round(255 * post.bait * 2)}, ${Math.round(255 * post.bait * 2)})` 
+                            : `rgb(${Math.round(255 * (2 - post.bait * 2))}, 255, ${Math.round(255 * (2 - post.bait * 2))})` 
+                        }}
                       >
                         🎣 BAIT: {post.bait.toFixed(2)}
                       </span>
                       <span 
-                        className="px-2 py-1 rounded text-black font-medium"
-                        style={{ backgroundColor: `rgb(${255 - Math.round(post.controversy * 255)}, 255, ${255 - Math.round(post.controversy * 255)})` }}
+                        className="font-medium"
+                        style={{ 
+                          color: post.controversy < 0.5 
+                            ? `rgb(${255}, ${Math.round(255 * post.controversy * 2)}, ${Math.round(255 * post.controversy * 2)})` 
+                            : `rgb(${Math.round(255 * (2 - post.controversy * 2))}, 255, ${Math.round(255 * (2 - post.controversy * 2))})` 
+                        }}
                       >
                         🔥 CONT: {post.controversy.toFixed(2)}
                       </span>
                       <span 
-                        className="px-2 py-1 rounded text-black font-medium"
-                        style={{ backgroundColor: `rgb(${255 - Math.round(post.news * 255)}, 255, ${255 - Math.round(post.news * 255)})` }}
+                        className="font-medium"
+                        style={{ 
+                          color: post.news < 0.5 
+                            ? `rgb(${255}, ${Math.round(255 * post.news * 2)}, ${Math.round(255 * post.news * 2)})` 
+                            : `rgb(${Math.round(255 * (2 - post.news * 2))}, 255, ${Math.round(255 * (2 - post.news * 2))})` 
+                        }}
                       >
                         📰 NEWS: {post.news.toFixed(2)}
                       </span>
                       <span 
-                        className="px-2 py-1 rounded text-black font-medium"
-                        style={{ backgroundColor: `rgb(${255 - Math.round(post.dunk * 255)}, 255, ${255 - Math.round(post.dunk * 255)})` }}
+                        className="font-medium"
+                        style={{ 
+                          color: post.dunk < 0.5 
+                            ? `rgb(${255}, ${Math.round(255 * post.dunk * 2)}, ${Math.round(255 * post.dunk * 2)})` 
+                            : `rgb(${Math.round(255 * (2 - post.dunk * 2))}, 255, ${Math.round(255 * (2 - post.dunk * 2))})` 
+                        }}
                       >
                         💥 DUNK: {post.dunk.toFixed(2)}
                       </span>
