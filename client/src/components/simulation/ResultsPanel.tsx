@@ -443,18 +443,30 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
       {/* Vibe Charts */}
       <Card className="p-6">
         <h3 className="text-sm font-medium text-accent mb-4">🏷️ Vibe Usage Over Time</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h4 className="text-sm text-foreground mb-2">Overall</h4>
-              <canvas 
-                id="chartVibeOverall" 
-                className="w-full h-40"
-                data-testid="chart-vibe-overall"
-              ></canvas>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm text-foreground mb-2">Overall</h4>
+                <canvas 
+                  id="chartVibeOverall" 
+                  className="w-full h-40"
+                  data-testid="chart-vibe-overall"
+                ></canvas>
+              </div>
+              <div>
+                <h4 className="text-sm text-foreground mb-2">By Type</h4>
+                <canvas 
+                  id="chartVibeByType" 
+                  className="w-full h-40"
+                  data-testid="chart-vibe-by-type"
+                ></canvas>
+              </div>
             </div>
+          </div>
+          <div className="ml-6 min-w-0 flex-shrink-0 w-64 space-y-6">
             {simulationState.seriesVibeOverall.length > 0 && (
-              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+              <div>
                 <div className="text-xs font-medium text-muted-foreground mb-3">Overall Vibe Usage Changes</div>
                 <div className="space-y-2 text-xs">
                   {(() => {
@@ -488,18 +500,8 @@ export default function ResultsPanel({ simulationState, isRunning }: ResultsPane
                 </div>
               </div>
             )}
-          </div>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h4 className="text-sm text-foreground mb-2">By Type</h4>
-              <canvas 
-                id="chartVibeByType" 
-                className="w-full h-40"
-                data-testid="chart-vibe-by-type"
-              ></canvas>
-            </div>
             {simulationState.seriesVibeByType && Object.keys(simulationState.seriesVibeByType).length > 0 && (
-              <div className="ml-6 min-w-0 flex-shrink-0 w-64">
+              <div>
                 <div className="text-xs font-medium text-muted-foreground mb-3">Vibe Usage by Type</div>
                 <div className="space-y-2 text-xs">
                   {USER_TYPES.map(type => {
