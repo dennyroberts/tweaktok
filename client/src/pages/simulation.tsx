@@ -61,11 +61,11 @@ export default function Simulation() {
       dunk: 0.00
     },
     mix: {
-      Normal: 55,
-      Joker: 10,
-      Troll: 10,
-      Intellectual: 15,
-      Journalist: 10
+      Normal: 25,
+      Joker: 25,
+      Troll: 25,
+      Intellectual: 25,
+      Journalist: 25
     },
     baseVibeProb: 0.05,
     maWindow: 10
