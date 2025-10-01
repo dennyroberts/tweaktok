@@ -483,9 +483,9 @@ export class SimulationEngine {
         id: i,
         type: t,
         strategy: strat,
-        vibeStrategy: clamp01(
-          VIBE_PROB[t] + randNorm(0, 0.15),
-        ),
+        vibeStrategy: Math.max(0.02, clamp01(
+          VIBE_PROB[t] + randNorm(0, 0.06),
+        )),
         wReact: clamp01(0.5 + Math.random() * 0.4),
         learnRate,
         followers: Math.max(
